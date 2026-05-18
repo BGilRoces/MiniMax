@@ -14,3 +14,12 @@ val PrimaryPurple = Color(0xFF4A24B2)
 val DarkPurple = Color(0xFF0F044A)
 val GrayishPurple = Color(0xFF4B4A62)
 val White = Color(0xFFFFFFFF)
+
+// MiniMax palette
+val MiniMaxPrimary = Color(0xFF3D1D8A)
+val MiniMaxAccent = Color(0xFF6B3FA0)
+val MiniMaxTeal = Color(0xFF0D9488)
+val MiniMaxBackground = Color(0xFFF8F7FF)
+val MiniMaxTextPrimary = Color(0xFF1A1A2E)
+val MiniMaxBadgeRed = Color(0xFFEF4444)
+val MiniMaxProgressBg = Color(0xFFE5E7EB)

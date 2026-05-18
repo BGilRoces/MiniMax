@@ -18,7 +18,7 @@ import net.eltiburon.minimax.ui.onboarding.pages.OnboardingPageThree
 import net.eltiburon.minimax.ui.theme.*
 
 @Composable
-fun OnboardingScreen() {
+fun OnboardingScreen(onFinish: () -> Unit = {}) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
 
@@ -55,7 +55,7 @@ fun OnboardingScreen() {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
                 } else {
-                    // TODO: Navegar a la pantalla principal (Login/Home)
+                    onFinish()
                 }
             }
         )
