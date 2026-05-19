@@ -2,7 +2,8 @@ package net.eltiburon.minimax.model
 
 enum class EstadoGrupo(val label: String) {
     FORMANDOSE("Formándose"),
-    CASI_LLENO("Casi Lleno")
+    CASI_LLENO("Casi Lleno"),
+    URGENTE("Urgente")
 }
 
 data class GrupoRecomendado(

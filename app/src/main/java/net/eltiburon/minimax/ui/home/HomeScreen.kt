@@ -1,12 +1,15 @@
 package net.eltiburon.minimax.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.GrupoActivo
 import net.eltiburon.minimax.model.GrupoRecomendado
@@ -37,10 +41,28 @@ private enum class NavTab(val label: String, val icon: ImageVector) {
     PERFIL("Perfil", Icons.Filled.Person)
 }
 
+// ── Items del Drawer ─────────────────────────────────────────────────────────
+
+private enum class DrawerNavItem(val label: String, val icon: ImageVector) {
+    DASHBOARD("Dashboard", Icons.Filled.Home),
+    MIS_PEDIDOS("Mis Pedidos", Icons.Filled.ShoppingBag),
+    GRUPOS_ACTIVOS("Grupos Activos", Icons.Filled.Group),
+    INVENTARIO("Inventario", Icons.Filled.Inventory2),
+    ANALITICA("Analítica", Icons.Filled.BarChart),
+    MI_PERFIL("Mi Perfil", Icons.Filled.Person),
+    CONFIGURACION("Configuración", Icons.Filled.Settings)
+}
+
 // ── Pantalla principal ───────────────────────────────────────────────────────
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    onGrupoClick: (String) -> Unit = {},
+    onGruposClick: () -> Unit = {},
+    onPerfilClick: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {},
+    viewModel: HomeViewModel = viewModel()
+) {
     val gruposActivos by viewModel.gruposActivos.collectAsState()
     val allRecomendados by viewModel.gruposRecomendados.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -54,49 +76,261 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
     }
 
     var selectedTab by remember { mutableStateOf(NavTab.DASHBOARD) }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        bottomBar = {
-            MiniMaxBottomBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            MiniMaxDrawerContent(
+                activeItem = DrawerNavItem.DASHBOARD,
+                onItemClick = { item ->
+                    scope.launch { drawerState.close() }
+                    when (item) {
+                        DrawerNavItem.MI_PERFIL -> onPerfilClick()
+                        DrawerNavItem.DASHBOARD -> { /* ya estamos aquí */ }
+                        else -> { /* pantallas no implementadas aún */ }
+                    }
+                },
+                onCerrarSesion = {
+                    scope.launch { drawerState.close() }
+                    onCerrarSesion()
+                }
+            )
         }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
-        ) {
-            item { HomeHeader() }
-            item { SavingsBanner() }
-            item { GruposActivosSection(gruposActivos) }
-            item {
-                GruposRecomendadosSection(
-                    grupos = gruposFiltrados,
-                    searchQuery = searchQuery,
-                    onSearchChange = viewModel::onSearchQueryChange
+    ) {
+        Scaffold(
+            containerColor = MiniMaxBackground,
+            bottomBar = {
+                MiniMaxBottomBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            NavTab.PERFIL -> onPerfilClick()
+                            NavTab.GRUPOS -> onGruposClick()
+                            else -> selectedTab = tab
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                item { HomeHeader(onMenuClick = { scope.launch { drawerState.open() } }) }
+                item { SavingsBanner() }
+                item { GruposActivosSection(gruposActivos, onGrupoClick) }
+                item {
+                    GruposRecomendadosSection(
+                        grupos = gruposFiltrados,
+                        searchQuery = searchQuery,
+                        onSearchChange = viewModel::onSearchQueryChange,
+                        onGrupoClick = onGrupoClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Drawer ───────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MiniMaxDrawerContent(
+    activeItem: DrawerNavItem,
+    onItemClick: (DrawerNavItem) -> Unit,
+    onCerrarSesion: () -> Unit
+) {
+    ModalDrawerSheet(drawerContainerColor = Color.White) {
+        Column(modifier = Modifier.fillMaxHeight()) {
+            DrawerHeader()
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 8.dp)
+            ) {
+                val mainItems = listOf(
+                    DrawerNavItem.DASHBOARD,
+                    DrawerNavItem.MIS_PEDIDOS,
+                    DrawerNavItem.GRUPOS_ACTIVOS,
+                    DrawerNavItem.INVENTARIO,
+                    DrawerNavItem.ANALITICA
+                )
+                val secondaryItems = listOf(
+                    DrawerNavItem.MI_PERFIL,
+                    DrawerNavItem.CONFIGURACION
+                )
+
+                mainItems.forEach { item ->
+                    DrawerItemRow(
+                        item = item,
+                        isActive = item == activeItem,
+                        onClick = { onItemClick(item) }
+                    )
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color(0xFFEEEEEE)
+                )
+
+                secondaryItems.forEach { item ->
+                    DrawerItemRow(
+                        item = item,
+                        isActive = item == activeItem,
+                        onClick = { onItemClick(item) }
+                    )
+                }
+            }
+
+            HorizontalDivider(color = Color(0xFFEEEEEE))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCerrarSesion() }
+                    .padding(horizontal = 24.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Logout,
+                    contentDescription = null,
+                    tint = Color(0xFFE53935),
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text = "Cerrar sesión",
+                    color = Color(0xFFE53935),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
                 )
             }
         }
     }
 }
 
+@Composable
+private fun DrawerHeader() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MiniMaxPrimary)
+            .padding(24.dp)
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(MiniMaxAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "LG",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = "Lucas Gonzalez",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Spacer(Modifier.height(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = 0.2f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Comprador",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DrawerItemRow(
+    item: DrawerNavItem,
+    isActive: Boolean,
+    onClick: () -> Unit
+) {
+    val bgColor = if (isActive) MiniMaxPrimary.copy(alpha = 0.10f) else Color.Transparent
+    val contentColor = if (isActive) MiniMaxPrimary else MiniMaxTextPrimary
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = item.label,
+            color = contentColor,
+            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = contentColor.copy(alpha = 0.45f),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
 // ── Header ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun HomeHeader() {
+private fun HomeHeader(onMenuClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(MiniMaxPrimary)
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .padding(horizontal = 8.dp, vertical = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo
+            // Hamburguesa + Logo
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "Abrir menú",
+                        tint = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -132,7 +366,7 @@ private fun HomeHeader() {
                         .background(MiniMaxAccent),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("JD", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("LG", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }
@@ -190,7 +424,7 @@ private fun SavingsBanner() {
 // ── Sección Grupos Activos ───────────────────────────────────────────────────
 
 @Composable
-private fun GruposActivosSection(grupos: List<GrupoActivo>) {
+private fun GruposActivosSection(grupos: List<GrupoActivo>, onGrupoClick: (String) -> Unit) {
     Column {
         Row(
             modifier = Modifier
@@ -215,7 +449,7 @@ private fun GruposActivosSection(grupos: List<GrupoActivo>) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(grupos, key = { it.id }) { grupo ->
-                GrupoActivoCard(grupo)
+                GrupoActivoCard(grupo, onGrupoClick)
             }
         }
 
@@ -224,15 +458,15 @@ private fun GruposActivosSection(grupos: List<GrupoActivo>) {
 }
 
 @Composable
-private fun GrupoActivoCard(grupo: GrupoActivo) {
+private fun GrupoActivoCard(grupo: GrupoActivo, onGrupoClick: (String) -> Unit) {
     Card(
+        onClick = { onGrupoClick(grupo.id.toString()) },
         modifier = Modifier.width(220.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Imagen / placeholder del producto
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -246,7 +480,6 @@ private fun GrupoActivoCard(grupo: GrupoActivo) {
                     tint = MiniMaxPrimary.copy(alpha = 0.35f),
                     modifier = Modifier.size(52.dp)
                 )
-                // Badge de prioridad
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -284,7 +517,6 @@ private fun GrupoActivoCard(grupo: GrupoActivo) {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Barra de progreso
                 LinearProgressIndicator(
                     progress = { grupo.progreso },
                     modifier = Modifier
@@ -314,7 +546,6 @@ private fun GrupoActivoCard(grupo: GrupoActivo) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Tiempo restante
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.AccessTime,
@@ -341,7 +572,8 @@ private fun GrupoActivoCard(grupo: GrupoActivo) {
 private fun GruposRecomendadosSection(
     grupos: List<GrupoRecomendado>,
     searchQuery: String,
-    onSearchChange: (String) -> Unit
+    onSearchChange: (String) -> Unit,
+    onGrupoClick: (String) -> Unit
 ) {
     Column {
         Text(
@@ -375,7 +607,7 @@ private fun GruposRecomendadosSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         grupos.forEach { grupo ->
-            GrupoRecomendadoItem(grupo)
+            GrupoRecomendadoItem(grupo, onGrupoClick)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -383,8 +615,9 @@ private fun GruposRecomendadosSection(
 }
 
 @Composable
-private fun GrupoRecomendadoItem(grupo: GrupoRecomendado) {
+private fun GrupoRecomendadoItem(grupo: GrupoRecomendado, onGrupoClick: (String) -> Unit) {
     Card(
+        onClick = { onGrupoClick(grupo.id.toString()) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -396,7 +629,6 @@ private fun GrupoRecomendadoItem(grupo: GrupoRecomendado) {
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícono del producto
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -441,6 +673,7 @@ private fun GrupoRecomendadoItem(grupo: GrupoRecomendado) {
                 val (labelColor, bgColor) = when (grupo.estado) {
                     EstadoGrupo.CASI_LLENO -> MiniMaxBadgeRed to MiniMaxBadgeRed.copy(alpha = 0.10f)
                     EstadoGrupo.FORMANDOSE -> MiniMaxAccent to MiniMaxAccent.copy(alpha = 0.10f)
+                    EstadoGrupo.URGENTE   -> Color(0xFFF59E0B) to Color(0xFFF59E0B).copy(alpha = 0.10f)
                 }
                 Box(
                     modifier = Modifier
@@ -497,7 +730,7 @@ private fun MiniMaxBottomBar(selectedTab: NavTab, onTabSelected: (NavTab) -> Uni
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun HomeScreenPreview() {
-    MiniMaxTheme {
+    net.eltiburon.minimax.ui.theme.MiniMaxTheme {
         HomeScreen()
     }
 }
