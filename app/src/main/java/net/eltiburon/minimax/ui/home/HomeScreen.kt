@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -76,6 +78,7 @@ fun HomeScreen(
     }
 
     var selectedTab by remember { mutableStateOf(NavTab.DASHBOARD) }
+    var activeDrawerItem by remember { mutableStateOf(DrawerNavItem.DASHBOARD) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -83,9 +86,10 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             MiniMaxDrawerContent(
-                activeItem = DrawerNavItem.DASHBOARD,
+                activeItem = activeDrawerItem,
                 onItemClick = { item ->
                     scope.launch { drawerState.close() }
+                    activeDrawerItem = item
                     when (item) {
                         DrawerNavItem.MI_PERFIL -> onPerfilClick()
                         DrawerNavItem.DASHBOARD -> { /* ya estamos aquí */ }
@@ -195,7 +199,7 @@ private fun MiniMaxDrawerContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Logout,
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = null,
                     tint = Color(0xFFE53935),
                     modifier = Modifier.size(22.dp)
@@ -412,7 +416,7 @@ private fun SavingsBanner() {
                 )
             }
             Icon(
-                imageVector = Icons.Filled.TrendingUp,
+                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                 contentDescription = null,
                 tint = Color.White.copy(alpha = 0.5f),
                 modifier = Modifier.size(52.dp)
@@ -730,7 +734,7 @@ private fun MiniMaxBottomBar(selectedTab: NavTab, onTabSelected: (NavTab) -> Uni
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun HomeScreenPreview() {
-    net.eltiburon.minimax.ui.theme.MiniMaxTheme {
+    MiniMaxTheme {
         HomeScreen()
     }
 }
