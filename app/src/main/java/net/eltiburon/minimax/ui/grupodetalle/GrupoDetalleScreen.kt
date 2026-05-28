@@ -37,6 +37,7 @@ import net.eltiburon.minimax.ui.theme.*
 fun GrupoDetalleScreen(
     grupoId: String,
     onBack: () -> Unit,
+    onSumarseClick: () -> Unit = {},
     viewModel: GrupoDetalleViewModel = viewModel()
 ) {
     val grupo by viewModel.grupo.collectAsState()
@@ -45,7 +46,13 @@ fun GrupoDetalleScreen(
     LaunchedEffect(grupoId) { viewModel.cargarGrupo(grupoId) }
 
     grupo?.let { g ->
-        GrupoDetalleContent(grupo = g, meUni = meUni, onBack = onBack, onToggleUnirse = viewModel::toggleUnirse)
+        GrupoDetalleContent(
+            grupo           = g,
+            meUni           = meUni,
+            onBack          = onBack,
+            onToggleUnirse  = viewModel::toggleUnirse,
+            onSumarseClick  = onSumarseClick
+        )
     } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = MiniMaxPrimary)
     }
@@ -58,7 +65,8 @@ private fun GrupoDetalleContent(
     grupo: GrupoDetalle,
     meUni: Boolean,
     onBack: () -> Unit,
-    onToggleUnirse: () -> Unit
+    onToggleUnirse: () -> Unit,
+    onSumarseClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -77,7 +85,7 @@ private fun GrupoDetalleContent(
             Spacer(modifier = Modifier.height(12.dp))
             InfoChipsRow(grupo = grupo)
             Spacer(modifier = Modifier.height(20.dp))
-            CTAButton(meUni = meUni, onToggle = onToggleUnirse)
+            CTAButton(meUni = meUni, onToggle = onToggleUnirse, onSumarseClick = onSumarseClick)
             Spacer(modifier = Modifier.height(12.dp))
             TrustIconsRow()
             Spacer(modifier = Modifier.height(16.dp))
@@ -399,9 +407,9 @@ private fun StackedAvatars() {
 // ── CTA ──────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CTAButton(meUni: Boolean, onToggle: () -> Unit) {
+private fun CTAButton(meUni: Boolean, onToggle: () -> Unit, onSumarseClick: () -> Unit) {
     Button(
-        onClick = onToggle,
+        onClick = if (meUni) onToggle else onSumarseClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(54.dp),
