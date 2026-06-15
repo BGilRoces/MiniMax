@@ -716,7 +716,7 @@ private fun MiniMaxBottomBar(selectedTab: NavTab, onTabSelected: (NavTab) -> Uni
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                label = { Text(tab.label, fontSize = 10.sp) },
+                alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MiniMaxPrimary,
                     selectedTextColor = MiniMaxPrimary,

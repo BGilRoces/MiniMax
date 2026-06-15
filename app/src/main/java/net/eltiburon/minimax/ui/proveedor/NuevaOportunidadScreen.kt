@@ -1,7 +1,15 @@
 package net.eltiburon.minimax.ui.proveedor
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,14 +23,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import net.eltiburon.minimax.ui.camera.CameraCaptureScreen
+import net.eltiburon.minimax.ui.camera.copyToInternalStorage
 import net.eltiburon.minimax.ui.theme.*
 
 private val categorias = listOf(
@@ -44,13 +61,94 @@ fun NuevaOportunidadScreen(
     val cantidadMinima  by vm.cantidadMinima.collectAsState()
     val stockDisponible by vm.stockDisponible.collectAsState()
     val fechaLimite     by vm.fechaLimite.collectAsState()
+    val imagenUri       by vm.imagenUri.collectAsState()
 
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope             = rememberCoroutineScope()
 
     var categoriaExpandida by remember { mutableStateOf(false) }
     var mostrarDatePicker  by remember { mutableStateOf(false) }
     val datePickerState    = rememberDatePickerState()
+
+    // ── Estado de cámara / imagen ────────────────────────────────────────────
+    var mostrarCamara        by remember { mutableStateOf(false) }
+    var mostrarOpcionesImg   by remember { mutableStateOf(false) }
+    var mostrarPermisoDenegado by remember { mutableStateOf(false) }
+
+    // Selector de galería: copia la imagen elegida al almacenamiento interno.
+    val galeriaLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { vm.onImagenChange(context.copyToInternalStorage(it)?.toString()) }
+    }
+
+    // Permiso de cámara en runtime.
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) mostrarCamara = true else mostrarPermisoDenegado = true
+    }
+
+    val pedirCamara: () -> Unit = {
+        val concedido = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (concedido) mostrarCamara = true
+        else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    // ── Overlay de cámara a pantalla completa ────────────────────────────────
+    if (mostrarCamara) {
+        CameraCaptureScreen(
+            onImageCaptured = { uri ->
+                vm.onImagenChange(uri.toString())
+                mostrarCamara = false
+            },
+            onClose = { mostrarCamara = false }
+        )
+        return
+    }
+
+    if (mostrarOpcionesImg) {
+        OpcionesImagenSheet(
+            onTomarFoto = {
+                mostrarOpcionesImg = false
+                pedirCamara()
+            },
+            onElegirGaleria = {
+                mostrarOpcionesImg = false
+                galeriaLauncher.launch("image/*")
+            },
+            onDismiss = { mostrarOpcionesImg = false }
+        )
+    }
+
+    if (mostrarPermisoDenegado) {
+        AlertDialog(
+            onDismissRequest = { mostrarPermisoDenegado = false },
+            confirmButton = {
+                TextButton(
+                    onClick = { mostrarPermisoDenegado = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MiniMaxAccent)
+                ) { Text("Entendido") }
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.NoPhotography,
+                    contentDescription = null,
+                    tint = MiniMaxAccent
+                )
+            },
+            title = { Text("Permiso de cámara necesario") },
+            text = {
+                Text(
+                    "Necesitamos acceso a la cámara para tomar la foto del producto. " +
+                        "Podés habilitar el permiso desde los ajustes de la aplicación."
+                )
+            }
+        )
+    }
 
     if (mostrarDatePicker) {
         DatePickerDialog(
@@ -105,7 +203,10 @@ fun NuevaOportunidadScreen(
                 ImagenProductoCard(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 12.dp),
+                    imagenUri = imagenUri,
+                    onAgregarImagen = { mostrarOpcionesImg = true },
+                    onEliminarImagen = { vm.onImagenChange(null) }
                 )
             }
 
@@ -233,7 +334,12 @@ private fun TituloBlock() {
 }
 
 @Composable
-private fun ImagenProductoCard(modifier: Modifier = Modifier) {
+private fun ImagenProductoCard(
+    modifier: Modifier = Modifier,
+    imagenUri: String?,
+    onAgregarImagen: () -> Unit,
+    onEliminarImagen: () -> Unit
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -248,42 +354,206 @@ private fun ImagenProductoCard(modifier: Modifier = Modifier) {
                 color = MiniMaxTextPrimary
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MiniMaxPrimary.copy(alpha = 0.04f))
-                    .border(
-                        width = 1.5.dp,
-                        color = MiniMaxPrimary.copy(alpha = 0.22f),
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+
+            if (imagenUri != null) {
+                // Vista previa de la imagen seleccionada con opción de cambiar/eliminar.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MiniMaxPrimary.copy(alpha = 0.04f))
+                ) {
+                    ProductoThumbnail(
+                        uri = imagenUri,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    IconButton(
+                        onClick = onEliminarImagen,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(Color.Black.copy(alpha = 0.45f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Eliminar imagen",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = onAgregarImagen,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxAccent),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxAccent)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CloudUpload,
+                        imageVector = Icons.Filled.Edit,
                         contentDescription = null,
-                        tint = MiniMaxAccent,
-                        modifier = Modifier.size(38.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Subir imagen",
-                        color = MiniMaxAccent,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Cambiar imagen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(130.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MiniMaxPrimary.copy(alpha = 0.04f))
+                        .border(
+                            width = 1.5.dp,
+                            color = MiniMaxPrimary.copy(alpha = 0.22f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable(onClick = onAgregarImagen),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CloudUpload,
+                            contentDescription = null,
+                            tint = MiniMaxAccent,
+                            modifier = Modifier.size(38.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Agregar imagen",
+                            color = MiniMaxAccent,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tomá una foto o elegí desde la galería. PNG o JPG.",
+                    fontSize = 11.sp,
+                    color = Color.Gray
+                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+/** Carga el [uri] (archivo interno) y lo muestra como thumbnail decodificado a bitmap. */
+@Composable
+private fun ProductoThumbnail(uri: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
+
+    LaunchedEffect(uri) {
+        bitmap = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.openInputStream(Uri.parse(uri))?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            }.getOrNull()
+        }
+    }
+
+    bitmap?.let {
+        Image(
+            bitmap = it,
+            contentDescription = "Imagen del producto",
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+/** Bottom sheet para elegir entre tomar una foto o seleccionar de la galería. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OpcionesImagenSheet(
+    onTomarFoto: () -> Unit,
+    onElegirGaleria: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp)
+        ) {
             Text(
-                text = "PNG o JPG. Máx. 5MB",
-                fontSize = 11.sp,
+                text = "Imagen del producto",
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                color = MiniMaxTextPrimary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OpcionImagenItem(
+                icon = Icons.Filled.PhotoCamera,
+                titulo = "Tomar foto",
+                subtitulo = "Usar la cámara del dispositivo",
+                onClick = onTomarFoto
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OpcionImagenItem(
+                icon = Icons.Filled.PhotoLibrary,
+                titulo = "Elegir de galería",
+                subtitulo = "Seleccionar una imagen existente",
+                onClick = onElegirGaleria
+            )
+        }
+    }
+}
+
+@Composable
+private fun OpcionImagenItem(
+    icon: ImageVector,
+    titulo: String,
+    subtitulo: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MiniMaxAccent.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MiniMaxAccent,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column {
+            Text(
+                text = titulo,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = MiniMaxTextPrimary
+            )
+            Text(
+                text = subtitulo,
+                fontSize = 12.sp,
                 color = Color.Gray
             )
         }
@@ -480,12 +750,28 @@ private fun CampoTexto(
         onValueChange = onValueChange,
         label = { LabelObligatorio(label, obligatorio) },
         leadingIcon = {
-            Icon(
-                imageVector = leadingIcon,
-                contentDescription = null,
-                tint = MiniMaxAccent,
-                modifier = Modifier.size(20.dp)
-            )
+            if (!singleLine) {
+                Box(
+                    modifier = Modifier.fillMaxHeight(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = null,
+                        tint = MiniMaxAccent,
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .size(20.dp)
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = MiniMaxAccent,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         },
         placeholder = if (placeholder.isNotEmpty()) {
             { Text(placeholder, color = Color.LightGray, fontSize = 14.sp) }

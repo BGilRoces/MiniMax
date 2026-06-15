@@ -30,6 +30,10 @@ class NuevaOportunidadViewModel : ViewModel() {
     private val _fechaLimite = MutableStateFlow("")
     val fechaLimite: StateFlow<String> = _fechaLimite
 
+    // Ruta/Uri de la imagen del producto (almacenamiento interno de la app). Null si no hay imagen.
+    private val _imagenUri = MutableStateFlow<String?>(null)
+    val imagenUri: StateFlow<String?> = _imagenUri
+
     fun onNombreChange(v: String)          { _nombre.value = v }
     fun onCategoriaChange(v: String)       { _categoria.value = v }
     fun onDescripcionChange(v: String)     { _descripcion.value = v }
@@ -38,6 +42,7 @@ class NuevaOportunidadViewModel : ViewModel() {
     fun onCantidadMinimaChange(v: String)  { _cantidadMinima.value = v }
     fun onStockDisponibleChange(v: String) { _stockDisponible.value = v }
     fun onFechaLimiteChange(v: String)     { _fechaLimite.value = v }
+    fun onImagenChange(uri: String?)       { _imagenUri.value = uri }
 
     fun camposObligatoriosCompletos(): Boolean =
         _nombre.value.isNotBlank() &&
@@ -55,5 +60,6 @@ class NuevaOportunidadViewModel : ViewModel() {
         _cantidadMinima.value = ""
         _stockDisponible.value = ""
         _fechaLimite.value = ""
+        _imagenUri.value = null
     }
 }

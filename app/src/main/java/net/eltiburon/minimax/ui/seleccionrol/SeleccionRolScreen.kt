@@ -89,9 +89,9 @@ fun SeleccionRolScreen(
             RolCard(
                 icon = Icons.Filled.ShoppingCart,
                 iconBg = MiniMaxTeal,
-                titulo = "Comprador / Minorista",
+                titulo = "Comprador",
                 descripcion = "Explorá grupos de compra activos y sumarte para acceder a precios mayoristas.",
-                badge = "Para mí",
+                badge = "Personal",
                 badgeBg = MiniMaxTeal.copy(alpha = 0.12f),
                 badgeColor = MiniMaxTeal,
                 onClick = onCompradorClick
@@ -103,9 +103,9 @@ fun SeleccionRolScreen(
             RolCard(
                 icon = Icons.Filled.Storefront,
                 iconBg = MiniMaxAccent,
-                titulo = "Proveedor / Mayorista",
+                titulo = "Proveedor",
                 descripcion = "Publicá oportunidades de venta, gestioná grupos y validá pedidos mayoristas.",
-                badge = "Para mi negocio",
+                badge = "Negocio",
                 badgeBg = MiniMaxAccent.copy(alpha = 0.12f),
                 badgeColor = MiniMaxAccent,
                 onClick = onProveedorClick

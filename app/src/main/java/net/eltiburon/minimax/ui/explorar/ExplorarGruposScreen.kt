@@ -1,13 +1,13 @@
 package net.eltiburon.minimax.ui.explorar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,41 +16,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.model.EstadoGrupo
-import net.eltiburon.minimax.model.GrupoResumen
+import net.eltiburon.minimax.model.GrupoRecomendado
 import net.eltiburon.minimax.ui.theme.*
-
-// ── Categorías disponibles ────────────────────────────────────────────────────
-
-private val CATEGORIAS = listOf(
-    "Todos", "Alimentos & Bebidas", "Electrónica",
-    "Decoración", "Cafetería", "Textil", "Gadgets"
-)
-
-// ── Pantalla principal ────────────────────────────────────────────────────────
 
 @Composable
 fun ExplorarGruposScreen(
-    onGrupoClick: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
-    viewModel: ExplorarGruposViewModel = viewModel()
+    onGrupoClick: (String) -> Unit = {}
 ) {
-    val gruposFiltrados by viewModel.gruposFiltrados.collectAsState()
-    val filtroCategoria by viewModel.filtroCategoria.collectAsState()
-    val filtroEstado by viewModel.filtroEstado.collectAsState()
-    val textoBusqueda by viewModel.textoBusqueda.collectAsState()
+    // Mock data
+    val grupos = remember {
+        listOf(
+            GrupoRecomendado(1, "Pack 24 Latas Coca-Cola 354ml", "Distribuidora Bebidas AR", 25, EstadoGrupo.CASI_LLENO),
+            GrupoRecomendado(2, "Harina 0000 1kg - Pack 10", "Molinos del Sur", 15, EstadoGrupo.FORMANDOSE),
+            GrupoRecomendado(3, "Aceite Girasol 1.5L - Caja 6", "Aceitera General Deheza", 20, EstadoGrupo.URGENTE),
+            GrupoRecomendado(4, "Leche Entera 1L - Pack 12", "Lácteos del Campo", 10, EstadoGrupo.FORMANDOSE),
+            GrupoRecomendado(5, "Arroz Largo Fino 1kg - Pack 10", "Arroceras Unidas", 18, EstadoGrupo.CASI_LLENO)
+        )
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+    val categorias = listOf("Todo", "Alimentos & Bebidas", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets")
+    var selectedCategoria by remember { mutableStateOf("Todo") }
 
     Scaffold(
         containerColor = MiniMaxBackground,
+        topBar = {
+            ExplorarTopBar(onBackClick)
+        },
         bottomBar = {
             ExplorarBottomBar(onHomeClick = onHomeClick, onPerfilClick = onPerfilClick)
         }
@@ -58,432 +59,220 @@ fun ExplorarGruposScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+                .padding(innerPadding)
         ) {
-            ExplorarHeader()
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(
-                    start = 12.dp, end = 12.dp,
-                    top = 12.dp, bottom = 16.dp
-                ),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxSize()
+            // Filtros y Búsqueda
+            Column(
+                modifier = Modifier
+                    .background(Color.White)
+                    .padding(vertical = 12.dp)
             ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    SearchBarRow(
-                        query = textoBusqueda,
-                        onQueryChange = viewModel::onBusquedaChange
-                    )
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    CategoriaChipsRow(
-                        selected = filtroCategoria,
-                        onSelect = viewModel::onCategoriaChange
-                    )
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    EstadoChipsRow(
-                        selected = filtroEstado,
-                        onSelect = viewModel::onEstadoChange
-                    )
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        text = "${gruposFiltrados.size} grupos disponibles",
-                        fontSize = 13.sp,
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
-                    )
-                }
-
-                if (gruposFiltrados.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        EmptyState()
-                    }
-                } else {
-                    items(gruposFiltrados, key = { it.id }) { grupo ->
-                        GrupoResumenCard(
-                            grupo = grupo,
-                            onClick = { onGrupoClick(grupo.id) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ── Header ────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ExplorarHeader() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MiniMaxPrimary)
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MiniMaxAccent),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    placeholder = { Text("¿Qué estás buscando?", fontSize = 14.sp) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Color.Gray) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiniMaxAccent,
+                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        focusedContainerColor = Color(0xFFF9FAFB),
+                        unfocusedContainerColor = Color(0xFFF9FAFB)
+                    ),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                ScrollableTabRow(
+                    selectedTabIndex = categorias.indexOf(selectedCategoria),
+                    edgePadding = 16.dp,
+                    containerColor = Color.Transparent,
+                    divider = {},
+                    indicator = {}
                 ) {
-                    Text("M", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    categorias.forEach { categoria ->
+                        val isSelected = categoria == selectedCategoria
+                        Tab(
+                            selected = isSelected,
+                            onClick = { selectedCategoria = categoria },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (isSelected) MiniMaxPrimary else Color(0xFFF3F4F6))
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = categoria,
+                                    color = if (isSelected) Color.White else Color.Gray,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = "Explorar Grupos",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
             }
+
+            // Resultados
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Resultados (${grupos.size})",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = MiniMaxTextPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+
+                items(grupos) { grupo ->
+                    ExplorarGrupoCard(grupo, onGrupoClick)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExplorarTopBar(onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Explorar Grupos", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+        },
+        actions = {
             IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = "Notificaciones",
-                    tint = Color.White
-                )
+                Icon(Icons.Filled.FilterList, contentDescription = "Filtros")
             }
-        }
-    }
-}
-
-// ── Barra de búsqueda ─────────────────────────────────────────────────────────
-
-@Composable
-private fun SearchBarRow(query: String, onQueryChange: (String) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("Buscar grupos...", fontSize = 14.sp) },
-            leadingIcon = {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color.Gray)
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MiniMaxAccent,
-                unfocusedBorderColor = Color.LightGray,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
-            )
-        )
-        Spacer(Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MiniMaxPrimary)
-                .clickable { },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Tune,
-                contentDescription = "Filtros",
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-    }
-}
-
-// ── Chips de categoría ────────────────────────────────────────────────────────
-
-@Composable
-private fun CategoriaChipsRow(selected: String, onSelect: (String) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        CATEGORIAS.forEach { cat ->
-            val isSelected = cat == selected
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(if (isSelected) MiniMaxPrimary else Color.White)
-                    .clickable { onSelect(cat) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = cat,
-                    color = if (isSelected) Color.White else MiniMaxTextPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                )
-            }
-        }
-    }
-}
-
-// ── Chips de estado ───────────────────────────────────────────────────────────
-
-@Composable
-private fun EstadoChipsRow(selected: EstadoGrupo?, onSelect: (EstadoGrupo?) -> Unit) {
-    val opciones = listOf(
-        Triple("Todos los estados", null as EstadoGrupo?, MiniMaxAccent),
-        Triple("Formándose", EstadoGrupo.FORMANDOSE, MiniMaxTeal),
-        Triple("Casi Lleno", EstadoGrupo.CASI_LLENO, MiniMaxOrange),
-        Triple("Urgente", EstadoGrupo.URGENTE, MiniMaxBadgeRed)
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
     )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        opciones.forEach { (label, estado, activeColor) ->
-            val isSelected = selected == estado
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(if (isSelected) activeColor else Color.White)
-                    .clickable { onSelect(if (selected == estado) null else estado) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = label,
-                    color = if (isSelected) Color.White else MiniMaxTextPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                )
-            }
-        }
-    }
 }
 
-// ── Card de grupo ─────────────────────────────────────────────────────────────
-
 @Composable
-private fun GrupoResumenCard(grupo: GrupoResumen, onClick: () -> Unit) {
-    val (bgColor, iconColor, cardIcon) = categoriaVisuals(grupo.categoria)
-    val (estadoColor, estadoLabel) = estadoVisuals(grupo.estado)
-
-    val progressColor = when (grupo.estado) {
-        EstadoGrupo.URGENTE -> MiniMaxBadgeRed
-        EstadoGrupo.CASI_LLENO -> MiniMaxOrange
-        EstadoGrupo.FORMANDOSE -> MiniMaxTeal
-    }
-
+private fun ExplorarGrupoCard(grupo: GrupoRecomendado, onGrupoClick: (String) -> Unit) {
     Card(
+        onClick = { onGrupoClick(grupo.id.toString()) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Imagen con badges
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
-                    .background(bgColor)
+                    .height(140.dp)
+                    .background(MiniMaxPrimary.copy(alpha = 0.05f))
             ) {
-                Icon(
-                    imageVector = cardIcon,
-                    contentDescription = null,
-                    tint = iconColor.copy(alpha = 0.45f),
+                val (bgColor, iconColor, icon) = categoriaVisuals("Alimentos & Bebidas")
+                
+                Box(
                     modifier = Modifier
-                        .size(52.dp)
                         .align(Alignment.Center)
-                )
-                // Badge categoría (esquina superior izquierda)
-                CardBadge(
-                    text = abreviarCategoria(grupo.categoria),
-                    bgColor = MiniMaxAccent,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(6.dp)
-                )
-                // Badge estado (esquina superior derecha)
-                CardBadge(
-                    text = estadoLabel,
-                    bgColor = estadoColor,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                )
-            }
-
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = grupo.nombre,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = MiniMaxTextPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 17.sp
-                )
-                Text(
-                    text = grupo.proveedor,
-                    fontSize = 10.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                // Precio grupal destacado
-                Text(
-                    text = "$${grupo.precioGrupal.toLong()}",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
-                    color = MiniMaxPrimary
-                )
-                // Precio original tachado + badge de descuento
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(bgColor),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "$${grupo.precioOriginal.toLong()}",
-                        fontSize = 10.sp,
-                        color = Color.Gray,
-                        style = TextStyle(textDecoration = TextDecoration.LineThrough)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(40.dp)
                     )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MiniMaxTeal.copy(alpha = 0.12f))
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
-                    ) {
-                        Text(
-                            text = "-${grupo.descuentoPorcentaje}%",
-                            fontSize = 9.sp,
-                            color = MiniMaxTeal,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
 
-                Spacer(Modifier.height(8.dp))
-
-                // Barra de progreso
-                LinearProgressIndicator(
-                    progress = { grupo.progresoActual / 100f },
+                // Badge descuento
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(5.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = progressColor,
-                    trackColor = MiniMaxProgressBg
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 3.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MiniMaxTeal)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "${grupo.progresoActual}%",
-                        fontSize = 10.sp,
-                        color = progressColor,
-                        fontWeight = FontWeight.SemiBold
+                        text = "-${grupo.descuento}%",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.AccessTime,
-                            contentDescription = null,
-                            modifier = Modifier.size(10.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(Modifier.width(2.dp))
+                }
+            }
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = grupo.tiempoRestante,
-                            fontSize = 10.sp,
+                            text = grupo.nombre,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MiniMaxTextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = grupo.proveedor,
+                            fontSize = 13.sp,
                             color = Color.Gray
                         )
                     }
                 }
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Botón reservar
-                Button(
-                    onClick = onClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(36.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MiniMaxAccent),
-                    contentPadding = PaddingValues(0.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Reservar Cupo",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
+                    // Estado badge
+                    val (estadoColor, estadoText) = estadoVisuals(grupo.estado)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(estadoColor.copy(alpha = 0.1f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = estadoText,
+                            color = estadoColor,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Botón
+                    Button(
+                        onClick = { onGrupoClick(grupo.id.toString()) },
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                        modifier = Modifier.height(32.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+                    ) {
+                        Text("Unirse", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
-    }
-}
-
-// ── Componentes auxiliares ────────────────────────────────────────────────────
-
-@Composable
-private fun CardBadge(text: String, bgColor: Color, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(bgColor)
-            .padding(horizontal = 5.dp, vertical = 2.dp)
-    ) {
-        Text(text = text, color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun EmptyState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Search,
-            contentDescription = null,
-            tint = MiniMaxPrimary.copy(alpha = 0.25f),
-            modifier = Modifier.size(80.dp)
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "No encontramos grupos",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = MiniMaxTextPrimary
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "para tu búsqueda",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
     }
 }
 
@@ -516,7 +305,7 @@ private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                label = { Text(label, fontSize = 10.sp) },
+                alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MiniMaxPrimary,
                     selectedTextColor = MiniMaxPrimary,
