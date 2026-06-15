@@ -2,33 +2,44 @@ package net.eltiburon.minimax.ui.explorar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.GrupoResumen
 
 class ExplorarGruposViewModel : ViewModel() {
 
+    // Lista completa (mock). Privada: la UI nunca la toca directamente.
     private val _todos = MutableStateFlow(mockGrupos())
 
-    val filtroCategoria = MutableStateFlow("Todos")
-    val filtroEstado = MutableStateFlow<EstadoGrupo?>(null)
-    val textoBusqueda = MutableStateFlow("")
+    // Estado de los filtros. Cada uno es un MutableStateFlow privado y se expone
+    // como StateFlow de solo lectura (.asStateFlow()) para respetar el flujo
+    // unidireccional: la UI lee el estado, pero solo lo modifica vía los onXxxChange().
+    private val _filtroCategoria = MutableStateFlow(CATEGORIA_TODAS)
+    val filtroCategoria: StateFlow<String> = _filtroCategoria.asStateFlow()
 
+    private val _textoBusqueda = MutableStateFlow("")
+    val textoBusqueda: StateFlow<String> = _textoBusqueda.asStateFlow()
+
+    // La lógica de negocio (el filtrado) vive en el ViewModel, no en la UI.
+    // Combinamos la lista con los filtros: cada vez que cambia cualquiera, se recalcula.
     val gruposFiltrados: StateFlow<List<GrupoResumen>> = combine(
-        _todos, filtroCategoria, filtroEstado, textoBusqueda
-    ) { todos, cat, estado, texto ->
-        todos.filter { g ->
-            (cat == "Todos" || g.categoria == cat) &&
-            (estado == null || g.estado == estado) &&
-            (texto.isBlank() ||
-                g.nombre.contains(texto, ignoreCase = true) ||
-                g.proveedor.contains(texto, ignoreCase = true))
+        _todos, _filtroCategoria, _textoBusqueda
+    ) { todos, categoria, texto ->
+        todos.filter { grupo ->
+            (categoria == CATEGORIA_TODAS || grupo.categoria == categoria) &&
+                (texto.isBlank() ||
+                    grupo.nombre.contains(texto, ignoreCase = true) ||
+                    grupo.proveedor.contains(texto, ignoreCase = true))
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, mockGrupos())
 
-    fun onCategoriaChange(cat: String) { filtroCategoria.value = cat }
-    fun onEstadoChange(estado: EstadoGrupo?) { filtroEstado.value = estado }
-    fun onBusquedaChange(texto: String) { textoBusqueda.value = texto }
+    fun onCategoriaChange(categoria: String) { _filtroCategoria.value = categoria }
+    fun onBusquedaChange(texto: String) { _textoBusqueda.value = texto }
 
     private fun mockGrupos() = listOf(
         GrupoResumen(
@@ -92,4 +103,9 @@ class ExplorarGruposViewModel : ViewModel() {
             progresoActual = 48, tiempoRestante = "7 días", estado = EstadoGrupo.FORMANDOSE
         ),
     )
+
+    companion object {
+        // Valor "centinela" que representa "sin filtro de categoría".
+        const val CATEGORIA_TODAS = "Todos"
+    }
 }

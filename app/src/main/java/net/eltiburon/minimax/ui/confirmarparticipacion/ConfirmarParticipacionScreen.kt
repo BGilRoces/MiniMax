@@ -5,42 +5,40 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.model.ProductoParticipacion
+import net.eltiburon.minimax.ui.common.MiniMaxTopBar
+import net.eltiburon.minimax.ui.participacion.ResumenParticipacionViewModel
 import net.eltiburon.minimax.ui.theme.*
-
-private const val NOMBRE_PRODUCTO  = "Caja de Aceite de Oliva Premium x12"
-private const val PROVEEDOR        = "Olivares del Valle"
-private const val CATEGORIA        = "Alimentos & Bebidas"
-private const val PRECIO_MAYORISTA = 34_000
-private const val PRECIO_UNITARIO  = 42_500
-private const val PROGRESO_GRUPO   = 0.80f
-private const val CAJAS_FALTANTES  = 12
-
-private fun formatearPrecio(valor: Int): String =
-    "$" + String.format(java.util.Locale.US, "%,d", valor).replace(",", ".")
+import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun ConfirmarParticipacionScreen(
     cantidadSeleccionada: Int = 1,
     onBackClick: () -> Unit = {},
-    onConfirmarClick: () -> Unit = {}
+    onConfirmarClick: () -> Unit = {},
+    viewModel: ResumenParticipacionViewModel = viewModel()
 ) {
-    val subtotal = cantidadSeleccionada * PRECIO_MAYORISTA
-    val ahorro   = cantidadSeleccionada * (PRECIO_UNITARIO - PRECIO_MAYORISTA)
+    // La cantidad llega por navegación; se la pasamos al ViewModel para que calcule el resumen.
+    LaunchedEffect(cantidadSeleccionada) { viewModel.setCantidad(cantidadSeleccionada) }
+
+    val producto by viewModel.producto.collectAsState()
+    val cantidad by viewModel.cantidad.collectAsState()
+    val subtotal by viewModel.subtotal.collectAsState()
+    val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
         containerColor = MiniMaxBackground
@@ -52,21 +50,22 @@ fun ConfirmarParticipacionScreen(
             contentPadding = PaddingValues(bottom = 36.dp)
         ) {
 
-            item { ConfirmacionHeader(onBackClick = onBackClick) }
+            item { MiniMaxTopBar(subtitulo = "Confirmar participación", onBackClick = onBackClick) }
 
             item {
                 ResumenProductoCard(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                    producto = producto,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
 
             item {
                 ParticipacionCard(
-                    cantidadSeleccionada = cantidadSeleccionada,
-                    subtotal             = subtotal,
-                    ahorro               = ahorro,
-                    modifier             = Modifier
+                    cantidadSeleccionada = cantidad,
+                    precioMayorista = producto.precioMayorista,
+                    subtotal = subtotal,
+                    ahorro = ahorro,
+                    modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
                 )
@@ -74,6 +73,7 @@ fun ConfirmarParticipacionScreen(
 
             item {
                 EstadoGrupoCard(
+                    producto = producto,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
@@ -98,9 +98,9 @@ fun ConfirmarParticipacionScreen(
 
             item {
                 BotonesConfirmacion(
-                    onVolver    = onBackClick,
+                    onVolver = onBackClick,
                     onConfirmar = onConfirmarClick,
-                    modifier    = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
         }
@@ -108,62 +108,7 @@ fun ConfirmarParticipacionScreen(
 }
 
 @Composable
-private fun ConfirmacionHeader(onBackClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MiniMaxPrimary)
-            .statusBarsPadding()
-            .padding(horizontal = 4.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxAccent),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "MiniMax",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    lineHeight = 20.sp
-                )
-                Text(
-                    text = "Confirmar participación",
-                    color = Color.White.copy(alpha = 0.78f),
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResumenProductoCard(modifier: Modifier = Modifier) {
+private fun ResumenProductoCard(producto: ProductoParticipacion, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -199,7 +144,7 @@ private fun ResumenProductoCard(modifier: Modifier = Modifier) {
                 ) {
                     BadgeOfertaGrupal()
                     Text(
-                        text = formatearPrecio(PRECIO_MAYORISTA),
+                        text = formatearPrecio(producto.precioMayorista),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MiniMaxTextPrimary
@@ -207,16 +152,16 @@ private fun ResumenProductoCard(modifier: Modifier = Modifier) {
                 }
                 Spacer(modifier = Modifier.height(7.dp))
                 Text(
-                    text = NOMBRE_PRODUCTO,
+                    text = producto.nombre,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = MiniMaxTextPrimary,
                     lineHeight = 19.sp
                 )
                 Spacer(modifier = Modifier.height(5.dp))
-                InfoMiniFila(icon = Icons.Filled.Store, texto = PROVEEDOR)
+                InfoMiniFila(icon = Icons.Filled.Store, texto = producto.proveedor)
                 Spacer(modifier = Modifier.height(3.dp))
-                InfoMiniFila(icon = Icons.Filled.Category, texto = CATEGORIA)
+                InfoMiniFila(icon = Icons.Filled.Category, texto = producto.categoria)
             }
         }
     }
@@ -252,6 +197,7 @@ private fun InfoMiniFila(icon: ImageVector, texto: String) {
 @Composable
 private fun ParticipacionCard(
     cantidadSeleccionada: Int,
+    precioMayorista: Int,
     subtotal: Int,
     ahorro: Int,
     modifier: Modifier = Modifier
@@ -288,7 +234,7 @@ private fun ParticipacionCard(
             Spacer(modifier = Modifier.height(8.dp))
             FilaParticipacion(
                 label = "Precio por caja",
-                valor = formatearPrecio(PRECIO_MAYORISTA),
+                valor = formatearPrecio(precioMayorista),
                 valorColor = MiniMaxTextPrimary
             )
 
@@ -369,7 +315,7 @@ private fun FilaParticipacion(
 }
 
 @Composable
-private fun EstadoGrupoCard(modifier: Modifier = Modifier) {
+private fun EstadoGrupoCard(producto: ProductoParticipacion, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -389,7 +335,7 @@ private fun EstadoGrupoCard(modifier: Modifier = Modifier) {
                     color = MiniMaxTextPrimary
                 )
                 Text(
-                    text = "${(PROGRESO_GRUPO * 100).toInt()}%",
+                    text = "${(producto.progresoGrupo * 100).toInt()}%",
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
                     color = MiniMaxTeal
@@ -397,7 +343,7 @@ private fun EstadoGrupoCard(modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             LinearProgressIndicator(
-                progress = { PROGRESO_GRUPO },
+                progress = { producto.progresoGrupo },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(10.dp)
@@ -409,7 +355,7 @@ private fun EstadoGrupoCard(modifier: Modifier = Modifier) {
             InfoGrupoFila(
                 icon = Icons.Filled.Info,
                 iconColor = MiniMaxOrange,
-                texto = "Faltan sólo $CAJAS_FALTANTES cajas para alcanzar el precio mayorista."
+                texto = "Faltan sólo ${producto.cajasFaltantes} cajas para alcanzar el precio mayorista."
             )
             Spacer(modifier = Modifier.height(8.dp))
             InfoGrupoFila(

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,19 +67,13 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val gruposActivos by viewModel.gruposActivos.collectAsState()
-    val allRecomendados by viewModel.gruposRecomendados.collectAsState()
+    // La lista ya viene filtrada desde el ViewModel; la UI solo la muestra.
+    val gruposFiltrados by viewModel.gruposRecomendados.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
-    val gruposFiltrados = remember(searchQuery, allRecomendados) {
-        if (searchQuery.isBlank()) allRecomendados
-        else allRecomendados.filter {
-            it.nombre.contains(searchQuery, ignoreCase = true) ||
-                it.proveedor.contains(searchQuery, ignoreCase = true)
-        }
-    }
-
-    var selectedTab by remember { mutableStateOf(NavTab.DASHBOARD) }
-    var activeDrawerItem by remember { mutableStateOf(DrawerNavItem.DASHBOARD) }
+    // rememberSaveable: la pestaña seleccionada sobrevive a la rotación de pantalla.
+    var selectedTab by rememberSaveable { mutableStateOf(NavTab.DASHBOARD) }
+    var activeDrawerItem by rememberSaveable { mutableStateOf(DrawerNavItem.DASHBOARD) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 

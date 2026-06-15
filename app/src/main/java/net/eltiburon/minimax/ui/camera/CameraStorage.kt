@@ -1,7 +1,6 @@
 package net.eltiburon.minimax.ui.camera
 
 import android.content.Context
-import android.net.Uri
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import java.io.File
@@ -18,20 +17,6 @@ fun Context.productImagesDir(): File =
 fun Context.newProductImageFile(): File {
     val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(System.currentTimeMillis())
     return File(productImagesDir(), "IMG_$timestamp.jpg")
-}
-
-/**
- * Copia el contenido de [source] (por ejemplo, una imagen elegida de la galería)
- * al almacenamiento interno de la app y devuelve el [Uri] del archivo resultante.
- */
-fun Context.copyToInternalStorage(source: Uri): Uri? {
-    return runCatching {
-        val destino = newProductImageFile()
-        contentResolver.openInputStream(source)?.use { input ->
-            destino.outputStream().use { output -> input.copyTo(output) }
-        } ?: return null
-        Uri.fromFile(destino)
-    }.getOrNull()
 }
 
 /** Obtiene el [ProcessCameraProvider] de forma suspendida (en vez de usar el listener crudo). */

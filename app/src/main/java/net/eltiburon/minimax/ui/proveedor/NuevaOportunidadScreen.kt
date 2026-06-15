@@ -2,8 +2,11 @@ package net.eltiburon.minimax.ui.proveedor
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -39,7 +42,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.eltiburon.minimax.ui.camera.CameraCaptureScreen
-import net.eltiburon.minimax.ui.camera.copyToInternalStorage
 import net.eltiburon.minimax.ui.theme.*
 
 private val categorias = listOf(
@@ -51,17 +53,17 @@ private val categorias = listOf(
 fun NuevaOportunidadScreen(
     onBackClick: () -> Unit = {},
     onPublicadoOk: () -> Unit = {},
-    vm: NuevaOportunidadViewModel = viewModel()
+    viewModel: NuevaOportunidadViewModel = viewModel()
 ) {
-    val nombre          by vm.nombre.collectAsState()
-    val categoria       by vm.categoria.collectAsState()
-    val descripcion     by vm.descripcion.collectAsState()
-    val precioMayorista by vm.precioMayorista.collectAsState()
-    val precioReferencia by vm.precioReferencia.collectAsState()
-    val cantidadMinima  by vm.cantidadMinima.collectAsState()
-    val stockDisponible by vm.stockDisponible.collectAsState()
-    val fechaLimite     by vm.fechaLimite.collectAsState()
-    val imagenUri       by vm.imagenUri.collectAsState()
+    val nombre          by viewModel.nombre.collectAsState()
+    val categoria       by viewModel.categoria.collectAsState()
+    val descripcion     by viewModel.descripcion.collectAsState()
+    val precioMayorista by viewModel.precioMayorista.collectAsState()
+    val precioReferencia by viewModel.precioReferencia.collectAsState()
+    val cantidadMinima  by viewModel.cantidadMinima.collectAsState()
+    val stockDisponible by viewModel.stockDisponible.collectAsState()
+    val fechaLimite     by viewModel.fechaLimite.collectAsState()
+    val imagenUri       by viewModel.imagenUri.collectAsState()
 
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,15 +75,7 @@ fun NuevaOportunidadScreen(
 
     // ── Estado de cámara / imagen ────────────────────────────────────────────
     var mostrarCamara        by remember { mutableStateOf(false) }
-    var mostrarOpcionesImg   by remember { mutableStateOf(false) }
     var mostrarPermisoDenegado by remember { mutableStateOf(false) }
-
-    // Selector de galería: copia la imagen elegida al almacenamiento interno.
-    val galeriaLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { vm.onImagenChange(context.copyToInternalStorage(it)?.toString()) }
-    }
 
     // Permiso de cámara en runtime.
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -102,26 +96,12 @@ fun NuevaOportunidadScreen(
     if (mostrarCamara) {
         CameraCaptureScreen(
             onImageCaptured = { uri ->
-                vm.onImagenChange(uri.toString())
+                viewModel.onImagenChange(uri.toString())
                 mostrarCamara = false
             },
             onClose = { mostrarCamara = false }
         )
         return
-    }
-
-    if (mostrarOpcionesImg) {
-        OpcionesImagenSheet(
-            onTomarFoto = {
-                mostrarOpcionesImg = false
-                pedirCamara()
-            },
-            onElegirGaleria = {
-                mostrarOpcionesImg = false
-                galeriaLauncher.launch("image/*")
-            },
-            onDismiss = { mostrarOpcionesImg = false }
-        )
     }
 
     if (mostrarPermisoDenegado) {
@@ -159,7 +139,7 @@ fun NuevaOportunidadScreen(
                         datePickerState.selectedDateMillis?.let { millis ->
                             val instant = java.time.Instant.ofEpochMilli(millis)
                             val date = instant.atZone(java.time.ZoneId.of("UTC")).toLocalDate()
-                            vm.onFechaLimiteChange(
+                            viewModel.onFechaLimiteChange(
                                 "%02d/%02d/%04d".format(date.dayOfMonth, date.monthValue, date.year)
                             )
                         }
@@ -205,8 +185,8 @@ fun NuevaOportunidadScreen(
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp),
                     imagenUri = imagenUri,
-                    onAgregarImagen = { mostrarOpcionesImg = true },
-                    onEliminarImagen = { vm.onImagenChange(null) }
+                    onAgregarImagen = { pedirCamara() },
+                    onEliminarImagen = { viewModel.onImagenChange(null) }
                 )
             }
 
@@ -216,26 +196,26 @@ fun NuevaOportunidadScreen(
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp),
                     nombre = nombre,
-                    onNombreChange = vm::onNombreChange,
+                    onNombreChange = viewModel::onNombreChange,
                     categoria = categoria,
                     categoriaExpandida = categoriaExpandida,
                     onCategoriaExpand = { categoriaExpandida = it },
                     onCategoriaSelect = {
-                        vm.onCategoriaChange(it)
+                        viewModel.onCategoriaChange(it)
                         categoriaExpandida = false
                     },
                     descripcion = descripcion,
-                    onDescripcionChange = vm::onDescripcionChange,
+                    onDescripcionChange = viewModel::onDescripcionChange,
                     precioMayorista = precioMayorista,
-                    onPrecioMayoristaChange = vm::onPrecioMayoristaChange,
+                    onPrecioMayoristaChange = viewModel::onPrecioMayoristaChange,
                     precioReferencia = precioReferencia,
-                    onPrecioReferenciaChange = vm::onPrecioReferenciaChange,
+                    onPrecioReferenciaChange = viewModel::onPrecioReferenciaChange,
                     cantidadMinima = cantidadMinima,
-                    onCantidadMinimaChange = vm::onCantidadMinimaChange,
+                    onCantidadMinimaChange = viewModel::onCantidadMinimaChange,
                     stockDisponible = stockDisponible,
-                    onStockDisponibleChange = vm::onStockDisponibleChange,
+                    onStockDisponibleChange = viewModel::onStockDisponibleChange,
                     fechaLimite = fechaLimite,
-                    onFechaLimiteChange = vm::onFechaLimiteChange,
+                    onFechaLimiteChange = viewModel::onFechaLimiteChange,
                     onAbrirDatePicker = { mostrarDatePicker = true }
                 )
             }
@@ -250,7 +230,7 @@ fun NuevaOportunidadScreen(
                     },
                     onPublicar = {
                         scope.launch {
-                            if (vm.camposObligatoriosCompletos()) {
+                            if (viewModel.camposObligatoriosCompletos()) {
                                 snackbarHostState.showSnackbar("Oportunidad publicada correctamente")
                                 onPublicadoOk()
                             } else {
@@ -437,7 +417,7 @@ private fun ImagenProductoCard(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Tomá una foto o elegí desde la galería. PNG o JPG.",
+                    text = "Tomá una foto del producto con la cámara.",
                     fontSize = 11.sp,
                     color = Color.Gray
                 )
@@ -455,9 +435,19 @@ private fun ProductoThumbnail(uri: String, modifier: Modifier = Modifier) {
     LaunchedEffect(uri) {
         bitmap = withContext(Dispatchers.IO) {
             runCatching {
-                context.contentResolver.openInputStream(Uri.parse(uri))?.use { input ->
-                    BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
+                val parsed = Uri.parse(uri)
+                val decoded = context.contentResolver.openInputStream(parsed)?.use { input ->
+                    BitmapFactory.decodeStream(input)
+                } ?: return@runCatching null
+                // BitmapFactory ignora la orientación EXIF, así que la aplicamos manualmente
+                // para que la foto se muestre tal como fue tomada (sin rotarla).
+                val orientation = context.contentResolver.openInputStream(parsed)?.use { input ->
+                    ExifInterface(input).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL
+                    )
+                } ?: ExifInterface.ORIENTATION_NORMAL
+                decoded.applyExifOrientation(orientation).asImageBitmap()
             }.getOrNull()
         }
     }
@@ -472,92 +462,24 @@ private fun ProductoThumbnail(uri: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Bottom sheet para elegir entre tomar una foto o seleccionar de la galería. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun OpcionesImagenSheet(
-    onTomarFoto: () -> Unit,
-    onElegirGaleria: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Color.White
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 28.dp)
-        ) {
-            Text(
-                text = "Imagen del producto",
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
-                color = MiniMaxTextPrimary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OpcionImagenItem(
-                icon = Icons.Filled.PhotoCamera,
-                titulo = "Tomar foto",
-                subtitulo = "Usar la cámara del dispositivo",
-                onClick = onTomarFoto
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OpcionImagenItem(
-                icon = Icons.Filled.PhotoLibrary,
-                titulo = "Elegir de galería",
-                subtitulo = "Seleccionar una imagen existente",
-                onClick = onElegirGaleria
-            )
+/** Devuelve el bitmap rotado/espejado según la orientación EXIF indicada. */
+private fun Bitmap.applyExifOrientation(orientation: Int): Bitmap {
+    val matrix = Matrix()
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+        ExifInterface.ORIENTATION_TRANSPOSE -> {
+            matrix.postRotate(90f); matrix.postScale(-1f, 1f)
         }
+        ExifInterface.ORIENTATION_TRANSVERSE -> {
+            matrix.postRotate(270f); matrix.postScale(-1f, 1f)
+        }
+        else -> return this
     }
-}
-
-@Composable
-private fun OpcionImagenItem(
-    icon: ImageVector,
-    titulo: String,
-    subtitulo: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MiniMaxAccent.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MiniMaxAccent,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column {
-            Text(
-                text = titulo,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                color = MiniMaxTextPrimary
-            )
-            Text(
-                text = subtitulo,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-        }
-    }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

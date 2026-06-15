@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,30 +20,23 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.model.ProductoParticipacion
+import net.eltiburon.minimax.ui.common.MiniMaxTopBar
 import net.eltiburon.minimax.ui.theme.*
-
-private const val NOMBRE_PRODUCTO     = "Caja de Aceite de Oliva Premium x12"
-private const val PROVEEDOR           = "Olivares del Valle"
-private const val CATEGORIA           = "Alimentos & Bebidas"
-private const val PRECIO_UNITARIO     = 42_500
-private const val PRECIO_MAYORISTA    = 34_000
-private const val DESCUENTO_PCTJE     = 20
-private const val PROGRESO_GRUPO      = 0.80f
-private const val CAJAS_FALTANTES     = 12
-private const val CANTIDAD_MAXIMA     = 20
-
-private fun formatearPrecio(valor: Int): String =
-    "$" + String.format(java.util.Locale.US, "%,d", valor).replace(",", ".")
+import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun ElegirCantidadScreen(
     onBackClick: () -> Unit = {},
-    onContinuarClick: (Int) -> Unit = {}
+    onContinuarClick: (Int) -> Unit = {},
+    viewModel: ElegirCantidadViewModel = viewModel()
 ) {
-    var cantidad by rememberSaveable { mutableStateOf(1) }
-
-    val subtotal = cantidad * PRECIO_MAYORISTA
-    val ahorro   = cantidad * (PRECIO_UNITARIO - PRECIO_MAYORISTA)
+    // Todo el estado (producto, cantidad, subtotal, ahorro) baja desde el ViewModel.
+    val producto by viewModel.producto.collectAsState()
+    val cantidad by viewModel.cantidad.collectAsState()
+    val subtotal by viewModel.subtotal.collectAsState()
+    val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
         containerColor = MiniMaxBackground
@@ -57,17 +48,18 @@ fun ElegirCantidadScreen(
             contentPadding = PaddingValues(bottom = 36.dp)
         ) {
 
-            item { ElegirCantidadHeader(onBackClick = onBackClick) }
+            item { MiniMaxTopBar(subtitulo = "Elegir cantidad", onBackClick = onBackClick) }
 
             item {
                 ProductoResumenCard(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                    producto = producto,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
 
             item {
                 BloquePrecio(
+                    producto = producto,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
@@ -76,6 +68,7 @@ fun ElegirCantidadScreen(
 
             item {
                 ProgresoGrupoCard(
+                    producto = producto,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
@@ -85,8 +78,9 @@ fun ElegirCantidadScreen(
             item {
                 SelectorCantidadCard(
                     cantidad = cantidad,
-                    onMenos  = { if (cantidad > 1) cantidad-- },
-                    onMas    = { if (cantidad < CANTIDAD_MAXIMA) cantidad++ },
+                    cantidadMaxima = producto.cantidadMaxima,
+                    onMenos = viewModel::decrementar,
+                    onMas = viewModel::incrementar,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
@@ -96,8 +90,9 @@ fun ElegirCantidadScreen(
             item {
                 ResumenCompraCard(
                     cantidad = cantidad,
+                    precioMayorista = producto.precioMayorista,
                     subtotal = subtotal,
-                    ahorro   = ahorro,
+                    ahorro = ahorro,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
@@ -106,9 +101,9 @@ fun ElegirCantidadScreen(
 
             item {
                 BotonesAccion(
-                    onCancelar  = onBackClick,
+                    onCancelar = onBackClick,
                     onContinuar = { onContinuarClick(cantidad) },
-                    modifier    = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
         }
@@ -116,62 +111,7 @@ fun ElegirCantidadScreen(
 }
 
 @Composable
-private fun ElegirCantidadHeader(onBackClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MiniMaxPrimary)
-            .statusBarsPadding()
-            .padding(horizontal = 4.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxAccent),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "MiniMax",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    lineHeight = 20.sp
-                )
-                Text(
-                    text = "Elegir cantidad",
-                    color = Color.White.copy(alpha = 0.78f),
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProductoResumenCard(modifier: Modifier = Modifier) {
+private fun ProductoResumenCard(producto: ProductoParticipacion, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -217,16 +157,16 @@ private fun ProductoResumenCard(modifier: Modifier = Modifier) {
                 }
                 Spacer(modifier = Modifier.height(7.dp))
                 Text(
-                    text = NOMBRE_PRODUCTO,
+                    text = producto.nombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = MiniMaxTextPrimary,
                     lineHeight = 19.sp
                 )
                 Spacer(modifier = Modifier.height(5.dp))
-                InfoMiniFila(icon = Icons.Filled.Store, texto = PROVEEDOR)
+                InfoMiniFila(icon = Icons.Filled.Store, texto = producto.proveedor)
                 Spacer(modifier = Modifier.height(3.dp))
-                InfoMiniFila(icon = Icons.Filled.Category, texto = CATEGORIA)
+                InfoMiniFila(icon = Icons.Filled.Category, texto = producto.categoria)
             }
         }
     }
@@ -247,7 +187,7 @@ private fun InfoMiniFila(icon: androidx.compose.ui.graphics.vector.ImageVector, 
 }
 
 @Composable
-private fun BloquePrecio(modifier: Modifier = Modifier) {
+private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -268,7 +208,7 @@ private fun BloquePrecio(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = formatearPrecio(PRECIO_UNITARIO),
+                    text = formatearPrecio(producto.precioUnitario),
                     fontSize = 17.sp,
                     color = Color.Gray,
                     textDecoration = TextDecoration.LineThrough
@@ -287,7 +227,7 @@ private fun BloquePrecio(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = formatearPrecio(PRECIO_MAYORISTA),
+                    text = formatearPrecio(producto.precioMayorista),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MiniMaxTextPrimary
@@ -303,7 +243,7 @@ private fun BloquePrecio(modifier: Modifier = Modifier) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "-${DESCUENTO_PCTJE}%",
+                        text = "-${producto.descuentoPorcentaje}%",
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = Color.White
@@ -327,7 +267,7 @@ private fun BloquePrecio(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProgresoGrupoCard(modifier: Modifier = Modifier) {
+private fun ProgresoGrupoCard(producto: ProductoParticipacion, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -347,7 +287,7 @@ private fun ProgresoGrupoCard(modifier: Modifier = Modifier) {
                     color = MiniMaxTextPrimary
                 )
                 Text(
-                    text = "${(PROGRESO_GRUPO * 100).toInt()}%",
+                    text = "${(producto.progresoGrupo * 100).toInt()}%",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = MiniMaxTeal
@@ -355,7 +295,7 @@ private fun ProgresoGrupoCard(modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             LinearProgressIndicator(
-                progress = { PROGRESO_GRUPO },
+                progress = { producto.progresoGrupo },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(10.dp)
@@ -373,7 +313,7 @@ private fun ProgresoGrupoCard(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "Faltan sólo $CAJAS_FALTANTES cajas para alcanzar el precio mayorista.",
+                    text = "Faltan sólo ${producto.cajasFaltantes} cajas para alcanzar el precio mayorista.",
                     fontSize = 12.sp,
                     color = MiniMaxTextPrimary.copy(alpha = 0.68f),
                     lineHeight = 17.sp
@@ -386,6 +326,7 @@ private fun ProgresoGrupoCard(modifier: Modifier = Modifier) {
 @Composable
 private fun SelectorCantidadCard(
     cantidad: Int,
+    cantidadMaxima: Int,
     onMenos: () -> Unit,
     onMas: () -> Unit,
     modifier: Modifier = Modifier
@@ -444,7 +385,7 @@ private fun SelectorCantidadCard(
                         .padding(horizontal = 28.dp)
                 )
 
-                val masActivo = cantidad < CANTIDAD_MAXIMA
+                val masActivo = cantidad < cantidadMaxima
                 Box(
                     modifier = Modifier
                         .size(52.dp)
@@ -464,7 +405,7 @@ private fun SelectorCantidadCard(
 
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "Máximo disponible para este grupo: $CANTIDAD_MAXIMA cajas",
+                text = "Máximo disponible para este grupo: $cantidadMaxima cajas",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
@@ -476,6 +417,7 @@ private fun SelectorCantidadCard(
 @Composable
 private fun ResumenCompraCard(
     cantidad: Int,
+    precioMayorista: Int,
     subtotal: Int,
     ahorro: Int,
     modifier: Modifier = Modifier
@@ -507,7 +449,7 @@ private fun ResumenCompraCard(
             Spacer(modifier = Modifier.height(8.dp))
             FilaResumen(
                 label = "Precio por caja",
-                valor = formatearPrecio(PRECIO_MAYORISTA),
+                valor = formatearPrecio(precioMayorista),
                 valorColor = MiniMaxTextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))

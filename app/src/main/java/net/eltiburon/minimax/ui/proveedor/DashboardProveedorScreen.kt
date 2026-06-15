@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,41 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.ui.theme.*
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Modelos mock internos
-// ─────────────────────────────────────────────────────────────────────────────
-
-private data class PedidoPendienteMock(
-    val id: Int,
-    val nombre: String,
-    val compradores: Int,
-    val monto: String,
-    val cierraEn: String
-)
-
-private data class ProductoCatalogoMock(
-    val id: Int,
-    val nombre: String,
-    val unidades: Int,
-    val precio: String
-)
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Datos hardcodeados
-// ─────────────────────────────────────────────────────────────────────────────
-
-private val mockPedidosPendientes = listOf(
-    PedidoPendienteMock(1, "Componentes Electrónicos X-200", 12, "$4,200", "4h"),
-    PedidoPendienteMock(2, "Sillas Ergonómicas Serie-A", 45, "$12,850", "4h")
-)
-
-private val mockCatalogo = listOf(
-    ProductoCatalogoMock(1, "Teclado Mecánico RGB", 450, "$85.00"),
-    ProductoCatalogoMock(2, "Monitor 4K 27\" Ultra", 120, "$395.00"),
-    ProductoCatalogoMock(3, "Hub USB-C Premium", 12, "$38.00")
-)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bottom-nav tabs del proveedor
@@ -73,9 +41,15 @@ private enum class NavTabProveedor(val label: String, val icon: ImageVector) {
 
 @Composable
 fun DashboardProveedorScreen(
-    onNuevaOportunidadClick: () -> Unit = {}
+    onNuevaOportunidadClick: () -> Unit = {},
+    viewModel: DashboardProveedorViewModel = viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(NavTabProveedor.DASHBOARD) }
+    // Los datos (pedidos y catálogo) bajan desde el ViewModel.
+    val pedidosPendientes by viewModel.pedidosPendientes.collectAsState()
+    val catalogo by viewModel.catalogo.collectAsState()
+
+    // rememberSaveable: la pestaña seleccionada sobrevive a la rotación.
+    var selectedTab by rememberSaveable { mutableStateOf(NavTabProveedor.DASHBOARD) }
 
     Scaffold(
         containerColor = MiniMaxBackground,
@@ -98,8 +72,8 @@ fun DashboardProveedorScreen(
             item { ProveedorHeader() }
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
-            item { PedidosPendientesSection() }
-            item { CatalogoSection() }
+            item { PedidosPendientesSection(pedidosPendientes) }
+            item { CatalogoSection(catalogo) }
         }
     }
 }
@@ -338,7 +312,7 @@ private fun MetricaCard(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PedidosPendientesSection() {
+private fun PedidosPendientesSection(pedidos: List<PedidoPendiente>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -351,7 +325,7 @@ private fun PedidosPendientesSection() {
             color = MiniMaxTextPrimary
         )
         Spacer(modifier = Modifier.height(12.dp))
-        mockPedidosPendientes.forEach { pedido ->
+        pedidos.forEach { pedido ->
             PedidoPendienteCard(pedido)
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -359,7 +333,7 @@ private fun PedidosPendientesSection() {
 }
 
 @Composable
-private fun PedidoPendienteCard(pedido: PedidoPendienteMock) {
+private fun PedidoPendienteCard(pedido: PedidoPendiente) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -460,7 +434,7 @@ private fun InfoChip(icon: ImageVector, texto: String) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CatalogoSection() {
+private fun CatalogoSection(catalogo: List<ProductoCatalogo>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -488,7 +462,7 @@ private fun CatalogoSection() {
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        mockCatalogo.forEach { producto ->
+        catalogo.forEach { producto ->
             ProductoCatalogoItem(producto)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -496,7 +470,7 @@ private fun CatalogoSection() {
 }
 
 @Composable
-private fun ProductoCatalogoItem(producto: ProductoCatalogoMock) {
+private fun ProductoCatalogoItem(producto: ProductoCatalogo) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),

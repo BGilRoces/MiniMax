@@ -1,9 +1,13 @@
 package net.eltiburon.minimax.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.GrupoActivo
 import net.eltiburon.minimax.model.GrupoRecomendado
@@ -18,7 +22,18 @@ class HomeViewModel : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    val gruposRecomendados: StateFlow<List<GrupoRecomendado>> = _todosRecomendados
+    // El filtrado por búsqueda es lógica de negocio, así que vive en el ViewModel (antes
+    // estaba en el composable). Combinamos la lista completa con el texto buscado y la UI
+    // recibe directamente la lista ya filtrada.
+    val gruposRecomendados: StateFlow<List<GrupoRecomendado>> = combine(
+        _todosRecomendados, _searchQuery
+    ) { recomendados, query ->
+        if (query.isBlank()) recomendados
+        else recomendados.filter {
+            it.nombre.contains(query, ignoreCase = true) ||
+                it.proveedor.contains(query, ignoreCase = true)
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, gruposRecomendadosMock())
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query

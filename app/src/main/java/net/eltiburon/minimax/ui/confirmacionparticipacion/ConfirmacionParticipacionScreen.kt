@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,28 +18,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.model.ProductoParticipacion
+import net.eltiburon.minimax.ui.common.MiniMaxTopBar
+import net.eltiburon.minimax.ui.participacion.ResumenParticipacionViewModel
 import net.eltiburon.minimax.ui.theme.*
+import net.eltiburon.minimax.util.formatearPrecio
 
 private val MiniMaxSuccess = Color(0xFF10B981)
-
-private const val NOMBRE_PRODUCTO  = "Caja de Aceite de Oliva Premium x12"
-private const val PROVEEDOR        = "Olivares del Valle"
-private const val CATEGORIA        = "Alimentos & Bebidas"
-private const val PRECIO_MAYORISTA = 34_000
-private const val PRECIO_UNITARIO  = 42_500
-
-private fun formatearPrecio(valor: Int): String =
-    "$" + String.format(java.util.Locale.US, "%,d", valor).replace(",", ".")
 
 @Composable
 fun ConfirmacionParticipacionScreen(
     cantidadSeleccionada: Int = 1,
     onBackClick: () -> Unit = {},
     onVerMisComprasClick: () -> Unit = {},
-    onVolverInicioClick: () -> Unit = {}
+    onVolverInicioClick: () -> Unit = {},
+    viewModel: ResumenParticipacionViewModel = viewModel()
 ) {
-    val subtotal = cantidadSeleccionada * PRECIO_MAYORISTA
-    val ahorro   = cantidadSeleccionada * (PRECIO_UNITARIO - PRECIO_MAYORISTA)
+    LaunchedEffect(cantidadSeleccionada) { viewModel.setCantidad(cantidadSeleccionada) }
+
+    val producto by viewModel.producto.collectAsState()
+    val cantidad by viewModel.cantidad.collectAsState()
+    val subtotal by viewModel.subtotal.collectAsState()
+    val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
         containerColor = MiniMaxBackground
@@ -51,7 +51,7 @@ fun ConfirmacionParticipacionScreen(
                 .padding(top = innerPadding.calculateTopPadding()),
             contentPadding = PaddingValues(bottom = 36.dp)
         ) {
-            item { ConfirmacionHeader(onBackClick = onBackClick) }
+            item { MiniMaxTopBar(subtitulo = "Confirmación", onBackClick = onBackClick) }
 
             item {
                 ExitoBlock(
@@ -61,10 +61,11 @@ fun ConfirmacionParticipacionScreen(
 
             item {
                 ResumenParticipacionCard(
-                    cantidadSeleccionada = cantidadSeleccionada,
-                    subtotal             = subtotal,
-                    ahorro               = ahorro,
-                    modifier             = Modifier
+                    producto = producto,
+                    cantidadSeleccionada = cantidad,
+                    subtotal = subtotal,
+                    ahorro = ahorro,
+                    modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
                 )
@@ -80,64 +81,9 @@ fun ConfirmacionParticipacionScreen(
 
             item {
                 BotonesNavegacion(
-                    onVerMisCompras  = onVerMisComprasClick,
-                    onVolverInicio   = onVolverInicioClick,
-                    modifier         = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ConfirmacionHeader(onBackClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MiniMaxPrimary)
-            .statusBarsPadding()
-            .padding(horizontal = 4.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxAccent),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "MiniMax",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    lineHeight = 20.sp
-                )
-                Text(
-                    text = "Confirmación",
-                    color = Color.White.copy(alpha = 0.78f),
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp
+                    onVerMisCompras = onVerMisComprasClick,
+                    onVolverInicio = onVolverInicioClick,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
         }
@@ -203,6 +149,7 @@ private fun ExitoBlock(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ResumenParticipacionCard(
+    producto: ProductoParticipacion,
     cantidadSeleccionada: Int,
     subtotal: Int,
     ahorro: Int,
@@ -233,11 +180,11 @@ private fun ResumenParticipacionCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ResumenFila(label = "Producto", valor = NOMBRE_PRODUCTO, multilinea = true)
+            ResumenFila(label = "Producto", valor = producto.nombre, multilinea = true)
             Spacer(modifier = Modifier.height(8.dp))
-            ResumenFila(label = "Proveedor", valor = PROVEEDOR)
+            ResumenFila(label = "Proveedor", valor = producto.proveedor)
             Spacer(modifier = Modifier.height(8.dp))
-            ResumenFila(label = "Categoría", valor = CATEGORIA)
+            ResumenFila(label = "Categoría", valor = producto.categoria)
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
@@ -251,7 +198,7 @@ private fun ResumenParticipacionCard(
             Spacer(modifier = Modifier.height(8.dp))
             ResumenFila(
                 label = "Precio por caja",
-                valor = formatearPrecio(PRECIO_MAYORISTA)
+                valor = formatearPrecio(producto.precioMayorista)
             )
             Spacer(modifier = Modifier.height(8.dp))
             ResumenFila(
@@ -486,7 +433,7 @@ private fun BotonesNavegacion(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun ConfirmacionParticipacionScreenPreview() {
-    net.eltiburon.minimax.ui.theme.MiniMaxTheme {
+    MiniMaxTheme {
         ConfirmacionParticipacionScreen(cantidadSeleccionada = 2)
     }
 }

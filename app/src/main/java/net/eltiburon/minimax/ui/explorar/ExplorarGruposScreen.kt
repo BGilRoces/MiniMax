@@ -21,8 +21,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.model.EstadoGrupo
-import net.eltiburon.minimax.model.GrupoRecomendado
+import net.eltiburon.minimax.model.GrupoResumen
 import net.eltiburon.minimax.ui.theme.*
 
 @Composable
@@ -30,22 +31,20 @@ fun ExplorarGruposScreen(
     onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
-    onGrupoClick: (String) -> Unit = {}
+    onGrupoClick: (String) -> Unit = {},
+    viewModel: ExplorarGruposViewModel = viewModel()
 ) {
-    // Mock data
-    val grupos = remember {
-        listOf(
-            GrupoRecomendado(1, "Pack 24 Latas Coca-Cola 354ml", "Distribuidora Bebidas AR", 25, EstadoGrupo.CASI_LLENO),
-            GrupoRecomendado(2, "Harina 0000 1kg - Pack 10", "Molinos del Sur", 15, EstadoGrupo.FORMANDOSE),
-            GrupoRecomendado(3, "Aceite Girasol 1.5L - Caja 6", "Aceitera General Deheza", 20, EstadoGrupo.URGENTE),
-            GrupoRecomendado(4, "Leche Entera 1L - Pack 12", "Lácteos del Campo", 10, EstadoGrupo.FORMANDOSE),
-            GrupoRecomendado(5, "Arroz Largo Fino 1kg - Pack 10", "Arroceras Unidas", 18, EstadoGrupo.CASI_LLENO)
-        )
-    }
+    // El estado baja desde el ViewModel (UDF). La lista ya viene filtrada por el VM,
+    // la UI solo la muestra; no contiene la data ni la lógica de filtrado.
+    val grupos by viewModel.gruposFiltrados.collectAsState()
+    val searchQuery by viewModel.textoBusqueda.collectAsState()
+    val selectedCategoria by viewModel.filtroCategoria.collectAsState()
 
-    var searchQuery by remember { mutableStateOf("") }
-    val categorias = listOf("Todo", "Alimentos & Bebidas", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets")
-    var selectedCategoria by remember { mutableStateOf("Todo") }
+    // Las categorías son una decisión de presentación (etiquetas de los chips).
+    val categorias = listOf(
+        ExplorarGruposViewModel.CATEGORIA_TODAS,
+        "Alimentos & Bebidas", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets"
+    )
 
     Scaffold(
         containerColor = MiniMaxBackground,
@@ -69,7 +68,7 @@ fun ExplorarGruposScreen(
             ) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    onValueChange = viewModel::onBusquedaChange,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -88,7 +87,7 @@ fun ExplorarGruposScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ScrollableTabRow(
-                    selectedTabIndex = categorias.indexOf(selectedCategoria),
+                    selectedTabIndex = categorias.indexOf(selectedCategoria).coerceAtLeast(0),
                     edgePadding = 16.dp,
                     containerColor = Color.Transparent,
                     divider = {},
@@ -98,7 +97,7 @@ fun ExplorarGruposScreen(
                         val isSelected = categoria == selectedCategoria
                         Tab(
                             selected = isSelected,
-                            onClick = { selectedCategoria = categoria },
+                            onClick = { viewModel.onCategoriaChange(categoria) },
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
                             Box(
@@ -135,7 +134,7 @@ fun ExplorarGruposScreen(
                     )
                 }
 
-                items(grupos) { grupo ->
+                items(grupos, key = { it.id }) { grupo ->
                     ExplorarGrupoCard(grupo, onGrupoClick)
                 }
             }
@@ -163,9 +162,9 @@ private fun ExplorarTopBar(onBackClick: () -> Unit) {
 }
 
 @Composable
-private fun ExplorarGrupoCard(grupo: GrupoRecomendado, onGrupoClick: (String) -> Unit) {
+private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Unit) {
     Card(
-        onClick = { onGrupoClick(grupo.id.toString()) },
+        onClick = { onGrupoClick(grupo.id) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -178,8 +177,9 @@ private fun ExplorarGrupoCard(grupo: GrupoRecomendado, onGrupoClick: (String) ->
                     .height(140.dp)
                     .background(MiniMaxPrimary.copy(alpha = 0.05f))
             ) {
-                val (bgColor, iconColor, icon) = categoriaVisuals("Alimentos & Bebidas")
-                
+                // Ahora usamos la categoría real del grupo (antes estaba hardcodeada).
+                val (bgColor, iconColor, icon) = categoriaVisuals(grupo.categoria)
+
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -206,7 +206,7 @@ private fun ExplorarGrupoCard(grupo: GrupoRecomendado, onGrupoClick: (String) ->
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "-${grupo.descuento}%",
+                        text = "-${grupo.descuentoPorcentaje}%",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
@@ -262,7 +262,7 @@ private fun ExplorarGrupoCard(grupo: GrupoRecomendado, onGrupoClick: (String) ->
 
                     // Botón
                     Button(
-                        onClick = { onGrupoClick(grupo.id.toString()) },
+                        onClick = { onGrupoClick(grupo.id) },
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                         modifier = Modifier.height(32.dp),
@@ -334,11 +334,6 @@ private fun estadoVisuals(estado: EstadoGrupo): Pair<Color, String> = when (esta
     EstadoGrupo.FORMANDOSE -> MiniMaxTeal     to "FORMÁNDOSE"
     EstadoGrupo.CASI_LLENO -> MiniMaxOrange   to "CASI LLENO"
     EstadoGrupo.URGENTE    -> MiniMaxBadgeRed to "URGENTE"
-}
-
-private fun abreviarCategoria(categoria: String): String = when (categoria) {
-    "Alimentos & Bebidas" -> "ALIMENTOS"
-    else                  -> categoria.uppercase().take(9)
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────

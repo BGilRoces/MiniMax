@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.model.GrupoDetalle
 import net.eltiburon.minimax.ui.theme.*
+import net.eltiburon.minimax.util.formatearPrecio
 
 // ── Entry point ──────────────────────────────────────────────────────────────
 
@@ -41,16 +42,16 @@ fun GrupoDetalleScreen(
     viewModel: GrupoDetalleViewModel = viewModel()
 ) {
     val grupo by viewModel.grupo.collectAsState()
-    val meUni by viewModel.meUni.collectAsState()
+    val estaUnido by viewModel.estaUnido.collectAsState()
 
     LaunchedEffect(grupoId) { viewModel.cargarGrupo(grupoId) }
 
     grupo?.let { g ->
         GrupoDetalleContent(
             grupo           = g,
-            meUni           = meUni,
+            estaUnido       = estaUnido,
             onBack          = onBack,
-            onToggleUnirse  = viewModel::toggleUnirse,
+            onToggleUnirse  = viewModel::alternarMembresia,
             onSumarseClick  = onSumarseClick
         )
     } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -63,7 +64,7 @@ fun GrupoDetalleScreen(
 @Composable
 private fun GrupoDetalleContent(
     grupo: GrupoDetalle,
-    meUni: Boolean,
+    estaUnido: Boolean,
     onBack: () -> Unit,
     onToggleUnirse: () -> Unit,
     onSumarseClick: () -> Unit
@@ -85,7 +86,7 @@ private fun GrupoDetalleContent(
             Spacer(modifier = Modifier.height(12.dp))
             InfoChipsRow(grupo = grupo)
             Spacer(modifier = Modifier.height(20.dp))
-            CTAButton(meUni = meUni, onToggle = onToggleUnirse, onSumarseClick = onSumarseClick)
+            CTAButton(estaUnido = estaUnido, onToggle = onToggleUnirse, onSumarseClick = onSumarseClick)
             Spacer(modifier = Modifier.height(12.dp))
             TrustIconsRow()
             Spacer(modifier = Modifier.height(16.dp))
@@ -209,7 +210,7 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
                 Column {
                     Text(text = "Precio unitario", fontSize = 11.sp, color = Color.Gray)
                     Text(
-                        text = formatPrecio(grupo.precioUnitario),
+                        text = formatearPrecio(grupo.precioUnitario),
                         fontSize = 16.sp,
                         color = Color.Gray,
                         textDecoration = TextDecoration.LineThrough
@@ -234,7 +235,7 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = formatPrecio(grupo.precioMayorista),
+                    text = formatearPrecio(grupo.precioMayorista),
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MiniMaxPrimary
@@ -407,27 +408,27 @@ private fun StackedAvatars() {
 // ── CTA ──────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CTAButton(meUni: Boolean, onToggle: () -> Unit, onSumarseClick: () -> Unit) {
+private fun CTAButton(estaUnido: Boolean, onToggle: () -> Unit, onSumarseClick: () -> Unit) {
     Button(
-        onClick = if (meUni) onToggle else onSumarseClick,
+        onClick = if (estaUnido) onToggle else onSumarseClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(54.dp),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (meUni) MiniMaxTeal else MiniMaxAccent,
+            containerColor = if (estaUnido) MiniMaxTeal else MiniMaxAccent,
             contentColor = Color.White
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
     ) {
         Icon(
-            imageVector = if (meUni) Icons.Filled.CheckCircle else Icons.Filled.Group,
+            imageVector = if (estaUnido) Icons.Filled.CheckCircle else Icons.Filled.Group,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = if (meUni) "¡Ya soy miembro!" else "Sumarme al grupo",
+            text = if (estaUnido) "¡Ya soy miembro!" else "Sumarme al grupo",
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
@@ -653,13 +654,6 @@ private fun ProveedorCardItem(card: ProveedorCardData) {
             }
         }
     }
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-private fun formatPrecio(precio: Double): String {
-    val str = precio.toLong().toString()
-    return "$" + str.reversed().chunked(3).joinToString(".").reversed()
 }
 
 // ── Preview ──────────────────────────────────────────────────────────────────

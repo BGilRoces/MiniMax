@@ -3,10 +3,13 @@ package net.eltiburon.minimax.ui.perfil
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import net.eltiburon.minimax.model.UsuarioComprador
 
 class MiPerfilViewModel : ViewModel() {
 
+    // Cada estado se expone como StateFlow de solo lectura (.asStateFlow()): la UI
+    // observa, pero solo puede modificarlo a través de los eventos (onXxxChange / guardarCambios).
     private val _usuario = MutableStateFlow(
         UsuarioComprador(
             nombre = "Lucas Gonzalez",
@@ -20,25 +23,25 @@ class MiPerfilViewModel : ViewModel() {
             avatarRes = 0
         )
     )
-    val usuario: StateFlow<UsuarioComprador> = _usuario
+    val usuario: StateFlow<UsuarioComprador> = _usuario.asStateFlow()
 
     private val _modoEdicion = MutableStateFlow(false)
-    val modoEdicion: StateFlow<Boolean> = _modoEdicion
+    val modoEdicion: StateFlow<Boolean> = _modoEdicion.asStateFlow()
 
     private val _nombreEdit = MutableStateFlow(_usuario.value.nombre)
-    val nombreEdit: StateFlow<String> = _nombreEdit
+    val nombreEdit: StateFlow<String> = _nombreEdit.asStateFlow()
 
     private val _emailEdit = MutableStateFlow(_usuario.value.email)
-    val emailEdit: StateFlow<String> = _emailEdit
+    val emailEdit: StateFlow<String> = _emailEdit.asStateFlow()
 
     private val _telefonoEdit = MutableStateFlow(_usuario.value.telefono)
-    val telefonoEdit: StateFlow<String> = _telefonoEdit
+    val telefonoEdit: StateFlow<String> = _telefonoEdit.asStateFlow()
 
     private val _negocioEdit = MutableStateFlow(_usuario.value.negocio)
-    val negocioEdit: StateFlow<String> = _negocioEdit
+    val negocioEdit: StateFlow<String> = _negocioEdit.asStateFlow()
 
     private val _direccionEdit = MutableStateFlow(_usuario.value.direccion)
-    val direccionEdit: StateFlow<String> = _direccionEdit
+    val direccionEdit: StateFlow<String> = _direccionEdit.asStateFlow()
 
     fun toggleEdicion() {
         if (_modoEdicion.value) {

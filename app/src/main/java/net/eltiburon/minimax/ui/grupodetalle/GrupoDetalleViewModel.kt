@@ -12,15 +12,16 @@ class GrupoDetalleViewModel : ViewModel() {
     private val _grupo = MutableStateFlow<GrupoDetalle?>(null)
     val grupo: StateFlow<GrupoDetalle?> = _grupo.asStateFlow()
 
-    private val _meUni = MutableStateFlow(false)
-    val meUni: StateFlow<Boolean> = _meUni.asStateFlow()
+    // Indica si el usuario ya se sumó al grupo (antes se llamaba "meUni", poco descriptivo).
+    private val _estaUnido = MutableStateFlow(false)
+    val estaUnido: StateFlow<Boolean> = _estaUnido.asStateFlow()
 
     fun cargarGrupo(grupoId: String) {
         _grupo.value = mockDetalle(grupoId)
     }
 
-    fun toggleUnirse() {
-        _meUni.value = !_meUni.value
+    fun alternarMembresia() {
+        _estaUnido.value = !_estaUnido.value
     }
 
     private fun mockDetalle(id: String) = GrupoDetalle(
