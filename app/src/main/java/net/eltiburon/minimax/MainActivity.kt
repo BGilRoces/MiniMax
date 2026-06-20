@@ -32,16 +32,19 @@ object Rutas {
     const val SELECCION_ROL = "seleccion_rol"
     const val HOME = "home"
     const val DASHBOARD_PROVEEDOR = "dashboard_proveedor"
-    const val NUEVA_OPORTUNIDAD = "nueva_oportunidad"
     const val EXPLORAR_GRUPOS = "explorar_grupos"
     const val MI_PERFIL = "mi_perfil"
 
     // Rutas con argumentos.
+    const val NUEVA_OPORTUNIDAD = "nueva_oportunidad?oportunidadId={oportunidadId}"
     const val GRUPO_DETALLE = "grupo_detalle/{grupoId}"
     const val ELEGIR_CANTIDAD = "elegir_cantidad/{grupoId}"
     const val CONFIRMAR_PARTICIPACION = "confirmar_participacion/{grupoId}/{cantidad}"
     const val CONFIRMACION_PARTICIPACION = "confirmacion_participacion/{grupoId}/{cantidad}"
 
+    // nueva_oportunidad sirve tanto para crear (sin id) como para editar (con id).
+    fun nuevaOportunidad(oportunidadId: String? = null) =
+        if (oportunidadId != null) "nueva_oportunidad?oportunidadId=$oportunidadId" else "nueva_oportunidad"
     fun grupoDetalle(grupoId: String) = "grupo_detalle/$grupoId"
     fun elegirCantidad(grupoId: String) = "elegir_cantidad/$grupoId"
     fun confirmarParticipacion(grupoId: String, cantidad: Int) =
@@ -104,13 +107,25 @@ private fun MiniMaxNavHost() {
 
         composable(Rutas.DASHBOARD_PROVEEDOR) {
             DashboardProveedorScreen(
-                onNuevaOportunidadClick = { navController.navigate(Rutas.NUEVA_OPORTUNIDAD) },
-                onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) }
+                onNuevaOportunidadClick = { navController.navigate(Rutas.nuevaOportunidad()) },
+                onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
+                onOportunidadEditClick = { id -> navController.navigate(Rutas.nuevaOportunidad(id)) }
             )
         }
 
-        composable(Rutas.NUEVA_OPORTUNIDAD) {
+        composable(
+            route = Rutas.NUEVA_OPORTUNIDAD,
+            arguments = listOf(
+                navArgument("oportunidadId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val oportunidadId = backStackEntry.arguments?.getString("oportunidadId")
             NuevaOportunidadScreen(
+                oportunidadId = oportunidadId,
                 onBackClick = { navController.popBackStack() },
                 onPublicadoOk = { navController.popBackStack() }
             )

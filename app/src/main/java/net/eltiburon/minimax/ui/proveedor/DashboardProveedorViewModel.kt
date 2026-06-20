@@ -53,6 +53,11 @@ class DashboardProveedorViewModel : ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /** Borra la oportunidad del repo; el catálogo se actualiza solo porque viene del StateFlow. */
+    fun eliminarOportunidad(id: String) {
+        OportunidadRepository.eliminar(id)
+    }
+
     private fun mockPedidos() = listOf(
         PedidoPendiente(1, "Componentes Electrónicos X-200", 12, "$4,200", "4h"),
         PedidoPendiente(2, "Sillas Ergonómicas Serie-A", 45, "$12,850", "4h")

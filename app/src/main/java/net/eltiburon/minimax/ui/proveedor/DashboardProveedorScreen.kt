@@ -43,6 +43,7 @@ private enum class NavTabProveedor(val label: String, val icon: ImageVector) {
 fun DashboardProveedorScreen(
     onNuevaOportunidadClick: () -> Unit = {},
     onOportunidadClick: (String) -> Unit = {},
+    onOportunidadEditClick: (String) -> Unit = {},
     viewModel: DashboardProveedorViewModel = viewModel()
 ) {
     // Los datos (pedidos y catálogo) bajan desde el ViewModel.
@@ -51,6 +52,29 @@ fun DashboardProveedorScreen(
 
     // rememberSaveable: la pestaña seleccionada sobrevive a la rotación.
     var selectedTab by rememberSaveable { mutableStateOf(NavTabProveedor.DASHBOARD) }
+
+    // Id pendiente de confirmación de borrado (null = no se está mostrando el diálogo).
+    var idAEliminar by remember { mutableStateOf<String?>(null) }
+
+    idAEliminar?.let { id ->
+        AlertDialog(
+            onDismissRequest = { idAEliminar = null },
+            title = { Text("¿Eliminar esta oportunidad?") },
+            text = { Text("Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.eliminarOportunidad(id)
+                        idAEliminar = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Eliminar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { idAEliminar = null }) { Text("Cancelar") }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MiniMaxBackground,
@@ -74,7 +98,14 @@ fun DashboardProveedorScreen(
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
             item { PedidosPendientesSection(pedidosPendientes) }
-            item { CatalogoSection(catalogo = catalogo, onProductoClick = onOportunidadClick) }
+            item {
+                CatalogoSection(
+                    catalogo = catalogo,
+                    onProductoClick = onOportunidadClick,
+                    onEditarClick = onOportunidadEditClick,
+                    onEliminarClick = { id -> idAEliminar = id }
+                )
+            }
         }
     }
 }
@@ -435,7 +466,12 @@ private fun InfoChip(icon: ImageVector, texto: String) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CatalogoSection(catalogo: List<ProductoCatalogo>, onProductoClick: (String) -> Unit) {
+private fun CatalogoSection(
+    catalogo: List<ProductoCatalogo>,
+    onProductoClick: (String) -> Unit,
+    onEditarClick: (String) -> Unit,
+    onEliminarClick: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -464,14 +500,24 @@ private fun CatalogoSection(catalogo: List<ProductoCatalogo>, onProductoClick: (
         }
         Spacer(modifier = Modifier.height(8.dp))
         catalogo.forEach { producto ->
-            ProductoCatalogoItem(producto, onClick = { onProductoClick(producto.id) })
+            ProductoCatalogoItem(
+                producto = producto,
+                onClick = { onProductoClick(producto.id) },
+                onEditarClick = { onEditarClick(producto.id) },
+                onEliminarClick = { onEliminarClick(producto.id) }
+            )
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-private fun ProductoCatalogoItem(producto: ProductoCatalogo, onClick: () -> Unit) {
+private fun ProductoCatalogoItem(
+    producto: ProductoCatalogo,
+    onClick: () -> Unit,
+    onEditarClick: () -> Unit,
+    onEliminarClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -531,6 +577,24 @@ private fun ProductoCatalogoItem(producto: ProductoCatalogo, onClick: () -> Unit
                     text = "por unidad",
                     fontSize = 10.sp,
                     color = Color.Gray
+                )
+            }
+
+            // Acciones: editar / eliminar
+            IconButton(onClick = onEditarClick, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Editar oportunidad",
+                    tint = MiniMaxPrimary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            IconButton(onClick = onEliminarClick, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Eliminar oportunidad",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

@@ -59,10 +59,21 @@ private fun formatearTiempoRestante(minutos: Int): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NuevaOportunidadScreen(
+    oportunidadId: String? = null,
     onBackClick: () -> Unit = {},
     onPublicadoOk: () -> Unit = {},
     viewModel: NuevaOportunidadViewModel = viewModel()
 ) {
+    val esEdicion = oportunidadId != null
+
+    // Si llega un id existente, precargamos el formulario con sus datos (editar);
+    // si no, el formulario queda vacío (crear), tal como antes.
+    LaunchedEffect(oportunidadId) {
+        oportunidadId?.let { id ->
+            OportunidadRepository.obtenerPorId(id)?.let { viewModel.cargarDesde(it) }
+        }
+    }
+
     val nombre          by viewModel.nombre.collectAsState()
     val categoria       by viewModel.categoria.collectAsState()
     val descripcion     by viewModel.descripcion.collectAsState()
@@ -185,7 +196,7 @@ fun NuevaOportunidadScreen(
         ) {
             item { NuevaOportunidadHeader(onBackClick = onBackClick) }
 
-            item { TituloBlock() }
+            item { TituloBlock(esEdicion = esEdicion) }
 
             item {
                 ImagenProductoCard(
@@ -236,9 +247,14 @@ fun NuevaOportunidadScreen(
                             snackbarHostState.showSnackbar("Borrador guardado")
                         }
                     },
+                    esEdicion = esEdicion,
                     onPublicar = {
                         scope.launch {
                             if (viewModel.camposObligatoriosCompletos()) {
+                                // Al editar, conservamos los campos que el formulario no captura
+                                // (proveedor, lote, progreso, etc.) tal como estaban.
+                                val existente = oportunidadId?.let { OportunidadRepository.obtenerPorId(it) }
+
                                 val precioMayoristaValor = precioMayorista.toDoubleOrNull() ?: 0.0
                                 val precioUnitarioValor = precioReferencia.toDoubleOrNull()
                                     ?.takeIf { it > 0 } ?: precioMayoristaValor
@@ -251,29 +267,43 @@ fun NuevaOportunidadScreen(
                                 val stockValor = stockDisponible.toIntOrNull() ?: cantidadMinimaValor
                                 val minutosRestantesValor = minutosHasta(fechaLimite)
 
-                                OportunidadRepository.agregar(
-                                    Oportunidad(
-                                        id = OportunidadRepository.nuevoId(),
-                                        nombre = nombre,
-                                        proveedor = "Mi Negocio",
-                                        categoria = categoria,
-                                        descripcion = descripcion,
-                                        imagenRes = R.drawable.aceite,
-                                        imagenUri = imagenUri,
-                                        precioUnitario = precioUnitarioValor,
-                                        precioMayorista = precioMayoristaValor,
-                                        descuentoPorcentaje = descuentoValor,
-                                        progresoActual = 0,
-                                        unidadesFaltantes = cantidadMinimaValor,
-                                        cantidadMaxima = cantidadMinimaValor.takeIf { it > 0 } ?: 20,
-                                        minutosRestantes = minutosRestantesValor,
-                                        tiempoRestanteTexto = formatearTiempoRestante(minutosRestantesValor),
-                                        stockDisponible = stockValor,
-                                        estado = EstadoGrupo.FORMANDOSE
-                                    )
+                                val oportunidad = Oportunidad(
+                                    id = existente?.id ?: OportunidadRepository.nuevoId(),
+                                    nombre = nombre,
+                                    proveedor = existente?.proveedor ?: "Mi Negocio",
+                                    proveedorDescripcion = existente?.proveedorDescripcion ?: "",
+                                    categoria = categoria,
+                                    descripcion = descripcion,
+                                    imagenRes = existente?.imagenRes ?: R.drawable.aceite,
+                                    imagenUri = imagenUri,
+                                    precioUnitario = precioUnitarioValor,
+                                    precioMayorista = precioMayoristaValor,
+                                    descuentoPorcentaje = descuentoValor,
+                                    progresoActual = existente?.progresoActual ?: 0,
+                                    unidadesFaltantes = cantidadMinimaValor,
+                                    cantidadMaxima = cantidadMinimaValor.takeIf { it > 0 } ?: 20,
+                                    minutosRestantes = minutosRestantesValor,
+                                    tiempoRestanteTexto = formatearTiempoRestante(minutosRestantesValor),
+                                    miembrosActivos = existente?.miembrosActivos ?: 0,
+                                    stockDisponible = stockValor,
+                                    lote = existente?.lote ?: "",
+                                    prioridad = existente?.prioridad ?: "PRIORIDAD ALTA",
+                                    origen = existente?.origen ?: "",
+                                    acidez = existente?.acidez ?: "",
+                                    crecimientoPorcentaje = existente?.crecimientoPorcentaje ?: 0,
+                                    estado = existente?.estado ?: EstadoGrupo.FORMANDOSE
                                 )
+
+                                if (existente != null) {
+                                    OportunidadRepository.editar(oportunidad)
+                                } else {
+                                    OportunidadRepository.agregar(oportunidad)
+                                }
+
                                 viewModel.limpiar()
-                                snackbarHostState.showSnackbar("Oportunidad publicada correctamente")
+                                snackbarHostState.showSnackbar(
+                                    if (existente != null) "Cambios guardados" else "Oportunidad publicada correctamente"
+                                )
                                 onPublicadoOk()
                             } else {
                                 snackbarHostState.showSnackbar("Completá los campos obligatorios")
@@ -333,21 +363,25 @@ private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
 }
 
 @Composable
-private fun TituloBlock() {
+private fun TituloBlock(esEdicion: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 20.dp)
     ) {
         Text(
-            text = "Nueva oportunidad",
+            text = if (esEdicion) "Editar oportunidad" else "Nueva oportunidad",
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             color = MiniMaxTextPrimary
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Completá los datos del producto para publicarlo como compra grupal.",
+            text = if (esEdicion) {
+                "Actualizá los datos del producto de esta compra grupal."
+            } else {
+                "Completá los datos del producto para publicarlo como compra grupal."
+            },
             fontSize = 14.sp,
             color = MiniMaxTextPrimary.copy(alpha = 0.60f),
             lineHeight = 20.sp
@@ -714,6 +748,7 @@ private fun campoColors() = OutlinedTextFieldDefaults.colors(
 @Composable
 private fun BotonesAccion(
     modifier: Modifier = Modifier,
+    esEdicion: Boolean,
     onGuardar: () -> Unit,
     onPublicar: () -> Unit
 ) {
@@ -748,12 +783,16 @@ private fun BotonesAccion(
             colors = ButtonDefaults.buttonColors(containerColor = MiniMaxTeal)
         ) {
             Icon(
-                imageVector = Icons.Filled.Publish,
+                imageVector = if (esEdicion) Icons.Filled.Save else Icons.Filled.Publish,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Publicar", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Text(
+                if (esEdicion) "Guardar cambios" else "Publicar",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp
+            )
         }
     }
 }

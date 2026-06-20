@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import net.eltiburon.minimax.model.Oportunidad
+import java.time.LocalDate
 
 class NuevaOportunidadViewModel : ViewModel() {
 
@@ -53,6 +55,26 @@ class NuevaOportunidadViewModel : ViewModel() {
         _precioMayorista.value.isNotBlank() &&
         _cantidadMinima.value.isNotBlank() &&
         _fechaLimite.value.isNotBlank()
+
+    /** Precarga el formulario con los datos de una oportunidad existente, para editarla. */
+    fun cargarDesde(oportunidad: Oportunidad) {
+        _nombre.value = oportunidad.nombre
+        _categoria.value = oportunidad.categoria
+        _descripcion.value = oportunidad.descripcion
+        _precioMayorista.value = oportunidad.precioMayorista.toInt().toString()
+        _precioReferencia.value = if (oportunidad.precioUnitario > oportunidad.precioMayorista) {
+            oportunidad.precioUnitario.toInt().toString()
+        } else ""
+        _cantidadMinima.value = oportunidad.unidadesFaltantes.toString()
+        _stockDisponible.value = oportunidad.stockDisponible.toString()
+        // El modelo no guarda la fecha límite original, solo los minutos restantes:
+        // reconstruimos una fecha aproximada para no dejar vacío un campo obligatorio.
+        val fechaAprox = LocalDate.now().plusDays((oportunidad.minutosRestantes / 1440).toLong())
+        _fechaLimite.value = "%02d/%02d/%04d".format(
+            fechaAprox.dayOfMonth, fechaAprox.monthValue, fechaAprox.year
+        )
+        _imagenUri.value = oportunidad.imagenUri
+    }
 
     fun limpiar() {
         _nombre.value = ""
