@@ -1,7 +1,7 @@
 package net.eltiburon.minimax.model
 
 data class GrupoActivo(
-    val id: Int,
+    val id: String,
     val nombreProducto: String,
     val proveedor: String,
     val lote: String,

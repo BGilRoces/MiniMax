@@ -459,7 +459,7 @@ private fun GruposActivosSection(grupos: List<GrupoActivo>, onGrupoClick: (Strin
 @Composable
 private fun GrupoActivoCard(grupo: GrupoActivo, onGrupoClick: (String) -> Unit) {
     Card(
-        onClick = { onGrupoClick(grupo.id.toString()) },
+        onClick = { onGrupoClick(grupo.id) },
         modifier = Modifier.width(220.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -616,7 +616,7 @@ private fun GruposRecomendadosSection(
 @Composable
 private fun GrupoRecomendadoItem(grupo: GrupoRecomendado, onGrupoClick: (String) -> Unit) {
     Card(
-        onClick = { onGrupoClick(grupo.id.toString()) },
+        onClick = { onGrupoClick(grupo.id) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),

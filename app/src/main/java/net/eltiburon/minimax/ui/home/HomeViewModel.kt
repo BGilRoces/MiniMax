@@ -7,17 +7,27 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import net.eltiburon.minimax.model.EstadoGrupo
+import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.model.GrupoActivo
 import net.eltiburon.minimax.model.GrupoRecomendado
+import net.eltiburon.minimax.model.toGrupoActivo
+import net.eltiburon.minimax.model.toGrupoRecomendado
+
+// IDs curados para las secciones de Home dentro del catálogo único de OportunidadRepository.
+private val ACTIVOS_IDS = setOf("1", "2", "3", "4")
+private val RECOMENDADOS_IDS = setOf("5", "6", "7", "8", "9")
 
 class HomeViewModel : ViewModel() {
 
-    private val _gruposActivos = MutableStateFlow(gruposActivosMock())
-    val gruposActivos: StateFlow<List<GrupoActivo>> = _gruposActivos.asStateFlow()
+    val gruposActivos: StateFlow<List<GrupoActivo>> = OportunidadRepository.obtenerTodas()
+        .map { todas -> todas.filter { it.id in ACTIVOS_IDS }.map { it.toGrupoActivo() } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val _todosRecomendados = MutableStateFlow(gruposRecomendadosMock())
+    private val _todosRecomendados: StateFlow<List<GrupoRecomendado>> = OportunidadRepository.obtenerTodas()
+        .map { todas -> todas.filter { it.id in RECOMENDADOS_IDS }.map { it.toGrupoRecomendado() } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -33,57 +43,9 @@ class HomeViewModel : ViewModel() {
             it.nombre.contains(query, ignoreCase = true) ||
                 it.proveedor.contains(query, ignoreCase = true)
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, gruposRecomendadosMock())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
     }
-
-    private fun gruposActivosMock() = listOf(
-        GrupoActivo(
-            id = 1,
-            nombreProducto = "Aceite de Girasol 5L",
-            proveedor = "Oleico SA",
-            lote = "Lote #2847",
-            progreso = 0.80f,
-            unidadesFaltantes = 24,
-            horasRestantes = 4
-        ),
-        GrupoActivo(
-            id = 2,
-            nombreProducto = "Arroz Largo Fino 5kg",
-            proveedor = "Arrocera del Sur",
-            lote = "Lote #1293",
-            progreso = 0.55f,
-            unidadesFaltantes = 45,
-            horasRestantes = 12
-        ),
-        GrupoActivo(
-            id = 3,
-            nombreProducto = "Papel Higiénico x48",
-            proveedor = "HigieniMax SRL",
-            lote = "Lote #5521",
-            progreso = 0.92f,
-            unidadesFaltantes = 8,
-            horasRestantes = 2,
-            prioridad = "URGENTE"
-        ),
-        GrupoActivo(
-            id = 4,
-            nombreProducto = "Detergente Industrial 5L",
-            proveedor = "CleanPro SA",
-            lote = "Lote #3310",
-            progreso = 0.35f,
-            unidadesFaltantes = 78,
-            horasRestantes = 24
-        )
-    )
-
-    private fun gruposRecomendadosMock() = listOf(
-        GrupoRecomendado(1, "Yerba Mate Premium 1kg", "Yerbatería Norte", 22, EstadoGrupo.FORMANDOSE),
-        GrupoRecomendado(2, "Fideos Mostachol x20", "Pasta del Campo", 18, EstadoGrupo.CASI_LLENO),
-        GrupoRecomendado(3, "Azúcar Común 50kg", "Ingenio Central", 30, EstadoGrupo.FORMANDOSE),
-        GrupoRecomendado(4, "Sal Gruesa 25kg", "Salinera Patagónica", 15, EstadoGrupo.CASI_LLENO),
-        GrupoRecomendado(5, "Tomates en Lata x24", "Conservas La Granja", 25, EstadoGrupo.FORMANDOSE)
-    )
 }

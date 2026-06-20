@@ -104,7 +104,8 @@ private fun MiniMaxNavHost() {
 
         composable(Rutas.DASHBOARD_PROVEEDOR) {
             DashboardProveedorScreen(
-                onNuevaOportunidadClick = { navController.navigate(Rutas.NUEVA_OPORTUNIDAD) }
+                onNuevaOportunidadClick = { navController.navigate(Rutas.NUEVA_OPORTUNIDAD) },
+                onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) }
             )
         }
 
@@ -141,6 +142,7 @@ private fun MiniMaxNavHost() {
         ) { backStackEntry ->
             val grupoId = backStackEntry.arguments?.getString("grupoId").orEmpty()
             ElegirCantidadScreen(
+                grupoId = grupoId,
                 onBackClick = { navController.popBackStack() },
                 onContinuarClick = { cantidad ->
                     navController.navigate(Rutas.confirmarParticipacion(grupoId, cantidad))
@@ -158,6 +160,7 @@ private fun MiniMaxNavHost() {
             val grupoId = backStackEntry.arguments?.getString("grupoId").orEmpty()
             val cantidad = backStackEntry.arguments?.getInt("cantidad") ?: 1
             ConfirmarParticipacionScreen(
+                grupoId = grupoId,
                 cantidadSeleccionada = cantidad,
                 onBackClick = { navController.popBackStack() },
                 onConfirmarClick = {
@@ -173,8 +176,10 @@ private fun MiniMaxNavHost() {
                 navArgument("cantidad") { type = NavType.IntType }
             )
         ) { backStackEntry ->
+            val grupoId = backStackEntry.arguments?.getString("grupoId").orEmpty()
             val cantidad = backStackEntry.arguments?.getInt("cantidad") ?: 1
             ConfirmacionParticipacionScreen(
+                grupoId = grupoId,
                 cantidadSeleccionada = cantidad,
                 onBackClick = { navController.popBackStack() },
                 onVerMisComprasClick = {

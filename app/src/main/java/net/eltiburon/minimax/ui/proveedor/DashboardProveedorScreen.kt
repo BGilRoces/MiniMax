@@ -42,6 +42,7 @@ private enum class NavTabProveedor(val label: String, val icon: ImageVector) {
 @Composable
 fun DashboardProveedorScreen(
     onNuevaOportunidadClick: () -> Unit = {},
+    onOportunidadClick: (String) -> Unit = {},
     viewModel: DashboardProveedorViewModel = viewModel()
 ) {
     // Los datos (pedidos y catálogo) bajan desde el ViewModel.
@@ -73,7 +74,7 @@ fun DashboardProveedorScreen(
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
             item { PedidosPendientesSection(pedidosPendientes) }
-            item { CatalogoSection(catalogo) }
+            item { CatalogoSection(catalogo = catalogo, onProductoClick = onOportunidadClick) }
         }
     }
 }
@@ -434,7 +435,7 @@ private fun InfoChip(icon: ImageVector, texto: String) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CatalogoSection(catalogo: List<ProductoCatalogo>) {
+private fun CatalogoSection(catalogo: List<ProductoCatalogo>, onProductoClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -463,15 +464,16 @@ private fun CatalogoSection(catalogo: List<ProductoCatalogo>) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         catalogo.forEach { producto ->
-            ProductoCatalogoItem(producto)
+            ProductoCatalogoItem(producto, onClick = { onProductoClick(producto.id) })
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-private fun ProductoCatalogoItem(producto: ProductoCatalogo) {
+private fun ProductoCatalogoItem(producto: ProductoCatalogo, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),

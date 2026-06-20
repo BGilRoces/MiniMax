@@ -28,10 +28,13 @@ import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun ElegirCantidadScreen(
+    grupoId: String,
     onBackClick: () -> Unit = {},
     onContinuarClick: (Int) -> Unit = {},
     viewModel: ElegirCantidadViewModel = viewModel()
 ) {
+    LaunchedEffect(grupoId) { viewModel.cargarGrupo(grupoId) }
+
     // Todo el estado (producto, cantidad, subtotal, ahorro) baja desde el ViewModel.
     val producto by viewModel.producto.collectAsState()
     val cantidad by viewModel.cantidad.collectAsState()
@@ -549,6 +552,6 @@ private fun BotonesAccion(
 @Composable
 private fun ElegirCantidadScreenPreview() {
     MiniMaxTheme {
-        ElegirCantidadScreen()
+        ElegirCantidadScreen(grupoId = "1")
     }
 }

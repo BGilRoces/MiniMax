@@ -7,7 +7,7 @@ enum class EstadoGrupo(val label: String) {
 }
 
 data class GrupoRecomendado(
-    val id: Int,
+    val id: String,
     val nombre: String,
     val proveedor: String,
     val descuento: Int,          // porcentaje, ej: 22 → "-22%"

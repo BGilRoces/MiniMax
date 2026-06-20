@@ -27,11 +27,13 @@ import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun ConfirmarParticipacionScreen(
+    grupoId: String,
     cantidadSeleccionada: Int = 1,
     onBackClick: () -> Unit = {},
     onConfirmarClick: () -> Unit = {},
     viewModel: ResumenParticipacionViewModel = viewModel()
 ) {
+    LaunchedEffect(grupoId) { viewModel.cargarGrupo(grupoId) }
     // La cantidad llega por navegación; se la pasamos al ViewModel para que calcule el resumen.
     LaunchedEffect(cantidadSeleccionada) { viewModel.setCantidad(cantidadSeleccionada) }
 
@@ -580,6 +582,6 @@ private fun BotonesConfirmacion(
 @Composable
 private fun ConfirmarParticipacionScreenPreview() {
     MiniMaxTheme {
-        ConfirmarParticipacionScreen(cantidadSeleccionada = 2)
+        ConfirmarParticipacionScreen(grupoId = "1", cantidadSeleccionada = 2)
     }
 }

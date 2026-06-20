@@ -5,6 +5,7 @@ data class GrupoDetalle(
     val nombre: String,
     val descripcion: String,
     val imagenRes: Int,
+    val imagenUri: String? = null,
     val precioUnitario: Double,
     val precioMayorista: Double,
     val progresoActual: Int,

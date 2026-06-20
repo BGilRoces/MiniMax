@@ -29,12 +29,14 @@ private val MiniMaxSuccess = Color(0xFF10B981)
 
 @Composable
 fun ConfirmacionParticipacionScreen(
+    grupoId: String,
     cantidadSeleccionada: Int = 1,
     onBackClick: () -> Unit = {},
     onVerMisComprasClick: () -> Unit = {},
     onVolverInicioClick: () -> Unit = {},
     viewModel: ResumenParticipacionViewModel = viewModel()
 ) {
+    LaunchedEffect(grupoId) { viewModel.cargarGrupo(grupoId) }
     LaunchedEffect(cantidadSeleccionada) { viewModel.setCantidad(cantidadSeleccionada) }
 
     val producto by viewModel.producto.collectAsState()
@@ -434,6 +436,6 @@ private fun BotonesNavegacion(
 @Composable
 private fun ConfirmacionParticipacionScreenPreview() {
     MiniMaxTheme {
-        ConfirmacionParticipacionScreen(cantidadSeleccionada = 2)
+        ConfirmacionParticipacionScreen(grupoId = "1", cantidadSeleccionada = 2)
     }
 }

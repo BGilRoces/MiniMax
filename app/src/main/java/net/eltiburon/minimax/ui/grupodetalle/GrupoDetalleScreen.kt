@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.model.GrupoDetalle
+import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
 import net.eltiburon.minimax.util.formatearPrecio
 
@@ -149,12 +150,17 @@ private fun HeroImageSection(grupo: GrupoDetalle) {
             .fillMaxWidth()
             .height(240.dp)
     ) {
-        Image(
-            painter = painterResource(id = grupo.imagenRes),
-            contentDescription = grupo.nombre,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        val imagenUri = grupo.imagenUri
+        if (imagenUri != null) {
+            UriImage(uri = imagenUri, modifier = Modifier.fillMaxSize())
+        } else {
+            Image(
+                painter = painterResource(id = grupo.imagenRes),
+                contentDescription = grupo.nombre,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()

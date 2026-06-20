@@ -2,14 +2,8 @@ package net.eltiburon.minimax.ui.proveedor
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.net.Uri
-import androidx.exifinterface.media.ExifInterface
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,10 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,15 +29,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import net.eltiburon.minimax.R
+import net.eltiburon.minimax.data.OportunidadRepository
+import net.eltiburon.minimax.model.EstadoGrupo
+import net.eltiburon.minimax.model.Oportunidad
 import net.eltiburon.minimax.ui.camera.CameraCaptureScreen
+import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
 
 private val categorias = listOf(
     "Alimentos", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets", "Otros"
 )
+
+private fun minutosHasta(fechaLimite: String): Int = try {
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val fecha = java.time.LocalDate.parse(fechaLimite, formatter)
+    val dias = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), fecha).toInt()
+    (dias * 1440).coerceAtLeast(60)
+} catch (e: Exception) {
+    1440
+}
+
+private fun formatearTiempoRestante(minutos: Int): String {
+    val dias = minutos / 1440
+    return if (dias >= 1) "$dias ${if (dias == 1) "día" else "días"}" else "${minutos / 60} hs"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -231,6 +239,40 @@ fun NuevaOportunidadScreen(
                     onPublicar = {
                         scope.launch {
                             if (viewModel.camposObligatoriosCompletos()) {
+                                val precioMayoristaValor = precioMayorista.toDoubleOrNull() ?: 0.0
+                                val precioUnitarioValor = precioReferencia.toDoubleOrNull()
+                                    ?.takeIf { it > 0 } ?: precioMayoristaValor
+                                val descuentoValor = if (precioUnitarioValor > 0) {
+                                    (((precioUnitarioValor - precioMayoristaValor) / precioUnitarioValor) * 100)
+                                        .toInt()
+                                        .coerceAtLeast(0)
+                                } else 0
+                                val cantidadMinimaValor = cantidadMinima.toIntOrNull() ?: 0
+                                val stockValor = stockDisponible.toIntOrNull() ?: cantidadMinimaValor
+                                val minutosRestantesValor = minutosHasta(fechaLimite)
+
+                                OportunidadRepository.agregar(
+                                    Oportunidad(
+                                        id = OportunidadRepository.nuevoId(),
+                                        nombre = nombre,
+                                        proveedor = "Mi Negocio",
+                                        categoria = categoria,
+                                        descripcion = descripcion,
+                                        imagenRes = R.drawable.aceite,
+                                        imagenUri = imagenUri,
+                                        precioUnitario = precioUnitarioValor,
+                                        precioMayorista = precioMayoristaValor,
+                                        descuentoPorcentaje = descuentoValor,
+                                        progresoActual = 0,
+                                        unidadesFaltantes = cantidadMinimaValor,
+                                        cantidadMaxima = cantidadMinimaValor.takeIf { it > 0 } ?: 20,
+                                        minutosRestantes = minutosRestantesValor,
+                                        tiempoRestanteTexto = formatearTiempoRestante(minutosRestantesValor),
+                                        stockDisponible = stockValor,
+                                        estado = EstadoGrupo.FORMANDOSE
+                                    )
+                                )
+                                viewModel.limpiar()
                                 snackbarHostState.showSnackbar("Oportunidad publicada correctamente")
                                 onPublicadoOk()
                             } else {
@@ -344,7 +386,7 @@ private fun ImagenProductoCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(MiniMaxPrimary.copy(alpha = 0.04f))
                 ) {
-                    ProductoThumbnail(
+                    UriImage(
                         uri = imagenUri,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -424,62 +466,6 @@ private fun ImagenProductoCard(
             }
         }
     }
-}
-
-/** Carga el [uri] (archivo interno) y lo muestra como thumbnail decodificado a bitmap. */
-@Composable
-private fun ProductoThumbnail(uri: String, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
-
-    LaunchedEffect(uri) {
-        bitmap = withContext(Dispatchers.IO) {
-            runCatching {
-                val parsed = Uri.parse(uri)
-                val decoded = context.contentResolver.openInputStream(parsed)?.use { input ->
-                    BitmapFactory.decodeStream(input)
-                } ?: return@runCatching null
-                // BitmapFactory ignora la orientación EXIF, así que la aplicamos manualmente
-                // para que la foto se muestre tal como fue tomada (sin rotarla).
-                val orientation = context.contentResolver.openInputStream(parsed)?.use { input ->
-                    ExifInterface(input).getAttributeInt(
-                        ExifInterface.TAG_ORIENTATION,
-                        ExifInterface.ORIENTATION_NORMAL
-                    )
-                } ?: ExifInterface.ORIENTATION_NORMAL
-                decoded.applyExifOrientation(orientation).asImageBitmap()
-            }.getOrNull()
-        }
-    }
-
-    bitmap?.let {
-        Image(
-            bitmap = it,
-            contentDescription = "Imagen del producto",
-            modifier = modifier,
-            contentScale = ContentScale.Crop
-        )
-    }
-}
-
-/** Devuelve el bitmap rotado/espejado según la orientación EXIF indicada. */
-private fun Bitmap.applyExifOrientation(orientation: Int): Bitmap {
-    val matrix = Matrix()
-    when (orientation) {
-        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
-        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
-        ExifInterface.ORIENTATION_TRANSPOSE -> {
-            matrix.postRotate(90f); matrix.postScale(-1f, 1f)
-        }
-        ExifInterface.ORIENTATION_TRANSVERSE -> {
-            matrix.postRotate(270f); matrix.postScale(-1f, 1f)
-        }
-        else -> return this
-    }
-    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

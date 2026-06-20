@@ -6,16 +6,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.model.ProductoParticipacion
+import net.eltiburon.minimax.model.toProductoParticipacion
 
 /**
  * ViewModel compartido por las pantallas "Confirmar participación" y "Confirmación".
  *
  * Las dos muestran el mismo resumen (producto + cantidad + subtotal + ahorro), por eso
- * reusamos un único ViewModel en vez de duplicar dos casi iguales (DRY). La cantidad llega
- * desde la navegación y se inyecta con [setCantidad] (mismo patrón que cargarGrupo()).
+ * reusamos un único ViewModel en vez de duplicar dos casi iguales (DRY). El producto se
+ * resuelve desde [OportunidadRepository] vía [cargarGrupo] usando el grupoId que llega por
+ * navegación; la cantidad llega por separado y se inyecta con [setCantidad].
  */
 class ResumenParticipacionViewModel : ViewModel() {
 
@@ -25,17 +28,18 @@ class ResumenParticipacionViewModel : ViewModel() {
     private val _cantidad = MutableStateFlow(1)
     val cantidad: StateFlow<Int> = _cantidad.asStateFlow()
 
-    val subtotal: StateFlow<Int> = _cantidad
-        .map { it * _producto.value.precioMayorista }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, _producto.value.precioMayorista)
+    val subtotal: StateFlow<Int> = combine(_cantidad, _producto) { cantidad, producto ->
+        cantidad * producto.precioMayorista
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, _producto.value.precioMayorista)
 
-    val ahorro: StateFlow<Int> = _cantidad
-        .map { it * (_producto.value.precioUnitario - _producto.value.precioMayorista) }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Eagerly,
-            _producto.value.precioUnitario - _producto.value.precioMayorista
-        )
+    val ahorro: StateFlow<Int> = combine(_cantidad, _producto) { cantidad, producto ->
+        cantidad * (producto.precioUnitario - producto.precioMayorista)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    fun cargarGrupo(grupoId: String) {
+        _producto.value = OportunidadRepository.obtenerPorId(grupoId)?.toProductoParticipacion()
+            ?: ProductoParticipacion.demo()
+    }
 
     fun setCantidad(cantidad: Int) {
         _cantidad.value = cantidad
