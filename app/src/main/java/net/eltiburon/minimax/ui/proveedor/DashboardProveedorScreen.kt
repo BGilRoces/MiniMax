@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.data.UsuarioRepository
 import net.eltiburon.minimax.ui.theme.*
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +46,7 @@ fun DashboardProveedorScreen(
     onNuevaOportunidadClick: () -> Unit = {},
     onOportunidadClick: (String) -> Unit = {},
     onOportunidadEditClick: (String) -> Unit = {},
+    onCerrarSesion: () -> Unit = {},
     viewModel: DashboardProveedorViewModel = viewModel()
 ) {
     // Los datos (pedidos y catálogo) bajan desde el ViewModel.
@@ -94,7 +97,7 @@ fun DashboardProveedorScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
         ) {
-            item { ProveedorHeader() }
+            item { ProveedorHeader(onCerrarSesion = onCerrarSesion) }
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
             item { PedidosPendientesSection(pedidosPendientes) }
@@ -115,7 +118,7 @@ fun DashboardProveedorScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ProveedorHeader() {
+private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,7 +164,7 @@ private fun ProveedorHeader() {
                 )
             }
 
-            // Notificaciones + Avatar
+            // Notificaciones + Avatar + Cerrar sesión
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { /* notificaciones futuro */ }) {
                     Icon(
@@ -183,6 +186,19 @@ private fun ProveedorHeader() {
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    onClick = {
+                        UsuarioRepository.cerrarSesion()
+                        onCerrarSesion()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Cerrar sesión",
+                        tint = Color.White
                     )
                 }
             }

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import net.eltiburon.minimax.data.UsuarioRepository
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.GrupoActivo
 import net.eltiburon.minimax.model.GrupoRecomendado
@@ -189,7 +190,10 @@ private fun MiniMaxDrawerContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onCerrarSesion() }
+                    .clickable {
+                        UsuarioRepository.cerrarSesion()
+                        onCerrarSesion()
+                    }
                     .padding(horizontal = 24.dp, vertical = 18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

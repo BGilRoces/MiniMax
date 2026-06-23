@@ -11,6 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.eltiburon.minimax.ui.OnboardingScreen
+import net.eltiburon.minimax.ui.auth.LoginScreen
+import net.eltiburon.minimax.ui.auth.RegistroScreen
 import net.eltiburon.minimax.ui.confirmacionparticipacion.ConfirmacionParticipacionScreen
 import net.eltiburon.minimax.ui.confirmarparticipacion.ConfirmarParticipacionScreen
 import net.eltiburon.minimax.ui.elegircantidad.ElegirCantidadScreen
@@ -29,6 +31,8 @@ import net.eltiburon.minimax.ui.theme.MiniMaxTheme
  */
 object Rutas {
     const val ONBOARDING = "onboarding"
+    const val LOGIN = "login"
+    const val REGISTRO = "registro"
     const val SELECCION_ROL = "seleccion_rol"
     const val HOME = "home"
     const val DASHBOARD_PROVEEDOR = "dashboard_proveedor"
@@ -80,7 +84,31 @@ private fun MiniMaxNavHost() {
 
         composable(Rutas.ONBOARDING) {
             OnboardingScreen(
-                onFinish = { navController.navigate(Rutas.SELECCION_ROL) }
+                onFinish = { navController.navigate(Rutas.LOGIN) }
+            )
+        }
+
+        composable(Rutas.LOGIN) {
+            LoginScreen(
+                onLoginExitoso = {
+                    // Login exitoso limpia Onboarding/Login del back stack.
+                    navController.navigate(Rutas.SELECCION_ROL) {
+                        popUpTo(Rutas.ONBOARDING) { inclusive = true }
+                    }
+                },
+                onIrARegistro = { navController.navigate(Rutas.REGISTRO) }
+            )
+        }
+
+        composable(Rutas.REGISTRO) {
+            RegistroScreen(
+                onRegistroExitoso = {
+                    // Tras registrarse, el usuario inicia sesión explícitamente.
+                    navController.navigate(Rutas.LOGIN) {
+                        popUpTo(Rutas.LOGIN) { inclusive = true }
+                    }
+                },
+                onIrALogin = { navController.popBackStack() }
             )
         }
 
@@ -97,8 +125,8 @@ private fun MiniMaxNavHost() {
                 onGruposClick = { navController.navigate(Rutas.EXPLORAR_GRUPOS) },
                 onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
                 onCerrarSesion = {
-                    // Cerrar sesión vuelve al onboarding y limpia todo el back stack.
-                    navController.navigate(Rutas.ONBOARDING) {
+                    // Cerrar sesión vuelve a Login y limpia todo el back stack.
+                    navController.navigate(Rutas.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -109,7 +137,13 @@ private fun MiniMaxNavHost() {
             DashboardProveedorScreen(
                 onNuevaOportunidadClick = { navController.navigate(Rutas.nuevaOportunidad()) },
                 onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
-                onOportunidadEditClick = { id -> navController.navigate(Rutas.nuevaOportunidad(id)) }
+                onOportunidadEditClick = { id -> navController.navigate(Rutas.nuevaOportunidad(id)) },
+                onCerrarSesion = {
+                    // Mismo comportamiento que el comprador: vuelve a Login limpiando el back stack.
+                    navController.navigate(Rutas.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
