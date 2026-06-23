@@ -17,8 +17,13 @@ import net.eltiburon.minimax.ui.confirmacionparticipacion.ConfirmacionParticipac
 import net.eltiburon.minimax.ui.confirmarparticipacion.ConfirmarParticipacionScreen
 import net.eltiburon.minimax.ui.elegircantidad.ElegirCantidadScreen
 import net.eltiburon.minimax.ui.explorar.ExplorarGruposScreen
+import net.eltiburon.minimax.data.ParticipacionRepository
+import net.eltiburon.minimax.data.UsuarioRepository
+import net.eltiburon.minimax.model.EstadoCompra
+import net.eltiburon.minimax.model.Participacion
 import net.eltiburon.minimax.ui.grupodetalle.GrupoDetalleScreen
 import net.eltiburon.minimax.ui.home.HomeScreen
+import net.eltiburon.minimax.ui.miscompras.MisComprasScreen
 import net.eltiburon.minimax.ui.perfil.MiPerfilScreen
 import net.eltiburon.minimax.ui.proveedor.DashboardProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.NuevaOportunidadScreen
@@ -38,6 +43,7 @@ object Rutas {
     const val DASHBOARD_PROVEEDOR = "dashboard_proveedor"
     const val EXPLORAR_GRUPOS = "explorar_grupos"
     const val MI_PERFIL = "mi_perfil"
+    const val MIS_COMPRAS = "mis_compras"
 
     // Rutas con argumentos.
     const val NUEVA_OPORTUNIDAD = "nueva_oportunidad?oportunidadId={oportunidadId}"
@@ -124,6 +130,7 @@ private fun MiniMaxNavHost() {
                 onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
                 onGruposClick = { navController.navigate(Rutas.EXPLORAR_GRUPOS) },
                 onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
+                onMisComprasClick = { navController.navigate(Rutas.MIS_COMPRAS) },
                 onCerrarSesion = {
                     // Cerrar sesión vuelve a Login y limpia todo el back stack.
                     navController.navigate(Rutas.LOGIN) {
@@ -213,6 +220,19 @@ private fun MiniMaxNavHost() {
                 cantidadSeleccionada = cantidad,
                 onBackClick = { navController.popBackStack() },
                 onConfirmarClick = {
+                    // Registra la participación con el usuario logueado antes de navegar.
+                    UsuarioRepository.usuarioActual.value?.let { usuario ->
+                        ParticipacionRepository.agregar(
+                            Participacion(
+                                id = ParticipacionRepository.nuevoId(),
+                                oportunidadId = grupoId,
+                                usuarioEmail = usuario.email,
+                                cantidad = cantidad,
+                                fechaMillis = System.currentTimeMillis(),
+                                estado = EstadoCompra.ACTIVA
+                            )
+                        )
+                    }
                     navController.navigate(Rutas.confirmacionParticipacion(grupoId, cantidad))
                 }
             )
@@ -232,8 +252,8 @@ private fun MiniMaxNavHost() {
                 cantidadSeleccionada = cantidad,
                 onBackClick = { navController.popBackStack() },
                 onVerMisComprasClick = {
-                    // Volver al Home limpiando el flujo de participación del back stack.
-                    navController.navigate(Rutas.HOME) {
+                    // Va a Mis Compras limpiando el flujo de participación del back stack.
+                    navController.navigate(Rutas.MIS_COMPRAS) {
                         popUpTo(Rutas.HOME) { inclusive = false }
                     }
                 },
@@ -248,6 +268,12 @@ private fun MiniMaxNavHost() {
         composable(Rutas.MI_PERFIL) {
             MiPerfilScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.MIS_COMPRAS) {
+            MisComprasScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

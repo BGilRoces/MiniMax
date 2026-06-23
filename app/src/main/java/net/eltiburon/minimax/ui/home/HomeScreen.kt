@@ -64,6 +64,7 @@ fun HomeScreen(
     onGrupoClick: (String) -> Unit = {},
     onGruposClick: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
+    onMisComprasClick: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -88,6 +89,7 @@ fun HomeScreen(
                     activeDrawerItem = item
                     when (item) {
                         DrawerNavItem.MI_PERFIL -> onPerfilClick()
+                        DrawerNavItem.MIS_PEDIDOS -> onMisComprasClick()
                         DrawerNavItem.DASHBOARD -> { /* ya estamos aquí */ }
                         else -> { /* pantallas no implementadas aún */ }
                     }
@@ -108,6 +110,7 @@ fun HomeScreen(
                         when (tab) {
                             NavTab.PERFIL -> onPerfilClick()
                             NavTab.GRUPOS -> onGruposClick()
+                            NavTab.PEDIDOS -> onMisComprasClick()
                             else -> selectedTab = tab
                         }
                     }
