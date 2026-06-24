@@ -88,25 +88,27 @@ private fun MetricaCard(metrica: Metrica, modifier: Modifier = Modifier) {
                 fontSize = 22.sp,
                 color = MiniMaxTextPrimary
             )
-            Spacer(Modifier.height(6.dp))
-            val color = if (metrica.positiva) MiniMaxTeal else MiniMaxBadgeRed
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (metrica.positiva)
-                        Icons.AutoMirrored.Filled.TrendingUp
-                    else
-                        Icons.AutoMirrored.Filled.TrendingDown,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = metrica.variacion,
-                    color = color,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+            if (metrica.variacion != null) {
+                Spacer(Modifier.height(6.dp))
+                val color = if (metrica.positiva) MiniMaxTeal else MiniMaxBadgeRed
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (metrica.positiva)
+                            Icons.AutoMirrored.Filled.TrendingUp
+                        else
+                            Icons.AutoMirrored.Filled.TrendingDown,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = metrica.variacion,
+                        color = color,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -114,7 +116,7 @@ private fun MetricaCard(metrica: Metrica, modifier: Modifier = Modifier) {
 
 @Composable
 private fun GraficoBarras(barras: List<BarraMes>) {
-    val maximo = (barras.maxOfOrNull { it.monto } ?: 1).coerceAtLeast(1)
+    val maximo = (barras.maxOfOrNull { it.monto } ?: 1.0).coerceAtLeast(1.0)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -130,7 +132,7 @@ private fun GraficoBarras(barras: List<BarraMes>) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             barras.forEach { barra ->
-                val fraccion = barra.monto.toFloat() / maximo
+                val fraccion = (barra.monto / maximo).toFloat()
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,

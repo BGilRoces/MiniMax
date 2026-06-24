@@ -1,49 +1,62 @@
 package net.eltiburon.minimax.ui.analitica
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import net.eltiburon.minimax.data.EstadisticasRepository
+import net.eltiburon.minimax.model.formatearPesos
 
 /** Una métrica destacada (tarjeta superior). */
 data class Metrica(
     val titulo: String,
     val valor: String,
-    val variacion: String,
-    val positiva: Boolean
+    /** Texto del badge de contexto (ej. lo ahorrado este mes). Null = sin badge. */
+    val variacion: String? = null,
+    val positiva: Boolean = true
 )
 
 /** Punto del gráfico de barras de ahorro mensual. */
 data class BarraMes(
     val mes: String,
-    val monto: Int
+    val monto: Double
 )
 
 /**
- * ViewModel de Analítica. Todo mock y en memoria: son datos de presentación que sirven
- * igual aunque después vengan de un backend real (la UI no cambia).
+ * ViewModel de Analítica. Deriva todo de [EstadisticasRepository] (mismas participaciones reales
+ * que alimentan "Mis Ahorros" en Home), así los números coinciden y se actualizan solos al
+ * confirmar o cancelar una compra.
  */
 class AnaliticaViewModel : ViewModel() {
 
-    private val _metricas = MutableStateFlow(mockMetricas())
-    val metricas: StateFlow<List<Metrica>> = _metricas.asStateFlow()
+    val metricas: StateFlow<List<Metrica>> = EstadisticasRepository.estadisticas()
+        .map { stats ->
+            val tasaExito = if (stats.pedidosRealizados > 0) {
+                (stats.gruposCompletados * 100) / stats.pedidosRealizados
+            } else 0
+            listOf(
+                Metrica(
+                    titulo = "Ahorro total",
+                    valor = formatearPesos(stats.totalAhorrado),
+                    variacion = if (stats.ahorroEsteMes > 0)
+                        "+${formatearPesos(stats.ahorroEsteMes)} este mes" else null,
+                    positiva = true
+                ),
+                Metrica("Grupos completados", stats.gruposCompletados.toString()),
+                Metrica("Pedidos realizados", stats.pedidosRealizados.toString()),
+                Metrica(
+                    titulo = "Tasa de éxito",
+                    valor = "$tasaExito%",
+                    variacion = "${stats.gruposCompletados}/${stats.pedidosRealizados} cerrados",
+                    positiva = tasaExito >= 50
+                )
+            )
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _ahorroMensual = MutableStateFlow(mockAhorroMensual())
-    val ahorroMensual: StateFlow<List<BarraMes>> = _ahorroMensual.asStateFlow()
-
-    private fun mockMetricas() = listOf(
-        Metrica("Ahorro total", "$45.200", "+12%", positiva = true),
-        Metrica("Grupos completados", "23", "+5", positiva = true),
-        Metrica("Pedidos realizados", "31", "+8%", positiva = true),
-        Metrica("Tasa de éxito", "87%", "-2%", positiva = false)
-    )
-
-    private fun mockAhorroMensual() = listOf(
-        BarraMes("Ene", 2200),
-        BarraMes("Feb", 3100),
-        BarraMes("Mar", 2800),
-        BarraMes("Abr", 4200),
-        BarraMes("May", 3600),
-        BarraMes("Jun", 5400)
-    )
+    val ahorroMensual: StateFlow<List<BarraMes>> = EstadisticasRepository.ahorroMensual()
+        .map { meses -> meses.map { BarraMes(it.etiqueta, it.monto) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

@@ -146,9 +146,18 @@ private fun MiniMaxNavHost() {
 
     // Navegación de pestañas/menú: reemplaza el tope del back stack guardando estado, de modo que
     // alternar entre secciones no apile pantallas y "volver" regrese siempre al dashboard del rol.
+    //
+    // Caso especial: cuando el destino es el propio dashboard (rolHome), no se puede usar
+    // popUpTo(rolHome) sin inclusive, porque navegar al mismo destino que es el ancla deja la
+    // navegación como no-op (el dashboard queda inalcanzable una vez que salimos de él). Por eso al
+    // ir al dashboard lo popeamos inclusive para reinsertar una instancia limpia.
     fun navegarASeccion(route: String) {
+        val esHome = rutaBase(route) == rolHome
         navController.navigate(route) {
-            popUpTo(rolHome) { saveState = true }
+            popUpTo(rolHome) {
+                inclusive = esHome
+                saveState = !esHome
+            }
             launchSingleTop = true
             restoreState = true
         }

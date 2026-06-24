@@ -30,19 +30,32 @@ object ParticipacionRepository {
 
     /**
      * Inserta la participación y descuenta el stock de la oportunidad (floor en 0) en una sola
-     * transacción de Room (ver ParticipacionDao.confirmarParticipacion). El progreso se
-     * recalcula como el % de cantidadMaxima ya cubierto por las unidades restantes.
+     * transacción de Room (ver ParticipacionDao.confirmarParticipacion).
+     *
+     * El progreso avanza al comprar: cada unidad reservada reduce [unidadesFaltantes] y sube el %.
+     * Ojo, NO se puede usar cantidadMaxima como objetivo del grupo: ese campo es el máximo que
+     * puede comprar un único usuario ("Máximo disponible para este grupo: X cajas"), no el total
+     * a cubrir, y en general está en otra escala que unidadesFaltantes (a veces incluso menor),
+     * por lo que el cálculo viejo hacía retroceder la barra. En su lugar derivamos el objetivo
+     * total implícito a partir del estado actual (progresoActual ↔ unidadesFaltantes): si faltan
+     * F unidades y eso representa el (100 - progreso)% restante, el objetivo es F / (1 - progreso/100).
      */
     suspend fun confirmarParticipacion(oportunidadId: String, usuarioEmail: String, cantidad: Int) {
         val oportunidadActual = OportunidadRepository.obtenerPorId(oportunidadId) ?: return
 
-        val unidadesFaltantesNuevas = (oportunidadActual.unidadesFaltantes - cantidad).coerceAtLeast(0)
-        val progresoNuevo = if (oportunidadActual.cantidadMaxima > 0) {
-            (((oportunidadActual.cantidadMaxima - unidadesFaltantesNuevas).toFloat() / oportunidadActual.cantidadMaxima) * 100)
-                .toInt()
-                .coerceIn(0, 100)
-        } else {
-            oportunidadActual.progresoActual
+        val progresoPrevio = oportunidadActual.progresoActual.coerceIn(0, 100)
+        val unidadesFaltantes = oportunidadActual.unidadesFaltantes
+        val unidadesFaltantesNuevas = (unidadesFaltantes - cantidad).coerceAtLeast(0)
+        val progresoNuevo = when {
+            unidadesFaltantesNuevas <= 0 || progresoPrevio >= 100 -> 100
+            unidadesFaltantes <= 0 -> progresoPrevio
+            else -> {
+                val objetivoTotal = unidadesFaltantes.toFloat() / (1f - progresoPrevio / 100f)
+                (((objetivoTotal - unidadesFaltantesNuevas) / objetivoTotal) * 100)
+                    .toInt()
+                    // piso de seguridad: el progreso nunca puede quedar por debajo del actual
+                    .coerceIn(progresoPrevio, 100)
+            }
         }
 
         val participacion = Participacion(
