@@ -26,22 +26,18 @@ import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun InventarioScreen(
-    onBack: () -> Unit = {},
     viewModel: InventarioViewModel = viewModel()
 ) {
     val items by viewModel.items.collectAsState()
     val busqueda by viewModel.busqueda.collectAsState()
     val bajoStock = items.count { it.stockBajo }
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Inventario", onBackClick = onBack) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground)
+    ) {
             Column(
                 modifier = Modifier
                     .background(Color.White)
@@ -98,7 +94,6 @@ fun InventarioScreen(
                     InventarioItemCard(item)
                 }
             }
-        }
     }
 }
 

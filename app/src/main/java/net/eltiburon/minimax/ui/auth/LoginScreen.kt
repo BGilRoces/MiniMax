@@ -1,10 +1,14 @@
 package net.eltiburon.minimax.ui.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -25,8 +29,10 @@ import net.eltiburon.minimax.ui.theme.*
 
 @Composable
 fun LoginScreen(
+    rol: String = "comprador",
     onLoginExitoso: () -> Unit = {},
     onIrARegistro: () -> Unit = {},
+    onCambiarRol: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
     val email by viewModel.email.collectAsState()
@@ -48,6 +54,11 @@ fun LoginScreen(
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
+        VolverRolButton(
+            onClick = onCambiarRol,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,6 +85,10 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            RolIndicatorChip(rol = rol, onClick = onCambiarRol)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -163,6 +178,62 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+/** Flecha "volver" arriba a la izquierda: regresa a la selección de rol. */
+@Composable
+internal fun VolverRolButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.padding(4.dp)
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Volver a elegir rol",
+            tint = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+/**
+ * Chip que muestra el rol elegido (Comprador / Proveedor) y permite volver a cambiarlo.
+ * Da contexto de "estás entrando como…" y, a la vez, es el acceso práctico para cambiar de rol.
+ */
+@Composable
+internal fun RolIndicatorChip(rol: String, onClick: () -> Unit) {
+    val esProveedor = rol == "proveedor"
+    val etiqueta = if (esProveedor) "Proveedor" else "Comprador"
+    val icono = if (esProveedor) Icons.Filled.Storefront else Icons.Filled.ShoppingCart
+
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icono,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = etiqueta,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Cambiar",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.secondary
+        )
     }
 }
 

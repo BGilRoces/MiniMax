@@ -4,12 +4,35 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
+import net.eltiburon.minimax.data.UsuarioRepository
+import net.eltiburon.minimax.ui.common.ShellBottomBar
+import net.eltiburon.minimax.ui.common.ShellDrawerContent
+import net.eltiburon.minimax.ui.common.ShellTopBar
+import net.eltiburon.minimax.ui.common.compradorTabs
+import net.eltiburon.minimax.ui.common.inicialesDe
+import net.eltiburon.minimax.ui.common.proveedorTabs
+import net.eltiburon.minimax.ui.common.rutaBase
+import net.eltiburon.minimax.ui.common.rutasConBarras
+import net.eltiburon.minimax.ui.common.subtituloDe
 import net.eltiburon.minimax.ui.OnboardingScreen
 import net.eltiburon.minimax.ui.auth.LoginScreen
 import net.eltiburon.minimax.ui.auth.RegistroScreen
@@ -24,12 +47,10 @@ import net.eltiburon.minimax.ui.perfil.MiPerfilScreen
 import net.eltiburon.minimax.ui.analitica.AnaliticaScreen
 import net.eltiburon.minimax.ui.inventario.InventarioScreen
 import net.eltiburon.minimax.ui.notificaciones.NotificacionesScreen
-import net.eltiburon.minimax.ui.pedidos.MisPedidosScreen
 import net.eltiburon.minimax.ui.proveedor.CatalogoProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.DashboardProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.NuevaOportunidadScreen
-import net.eltiburon.minimax.ui.proveedor.OportunidadesProveedorScreen
-import net.eltiburon.minimax.ui.proveedor.PedidosProveedorScreen
+import net.eltiburon.minimax.ui.proveedor.VentasProveedorScreen
 import net.eltiburon.minimax.ui.seleccionrol.SeleccionRolScreen
 import net.eltiburon.minimax.ui.theme.MiniMaxTheme
 
@@ -39,20 +60,18 @@ import net.eltiburon.minimax.ui.theme.MiniMaxTheme
  */
 object Rutas {
     const val ONBOARDING = "onboarding"
-    const val LOGIN = "login"
-    const val REGISTRO = "registro"
     const val SELECCION_ROL = "seleccion_rol"
+    const val LOGIN = "login/{rol}"
+    const val REGISTRO = "registro/{rol}"
     const val HOME = "home"
     const val DASHBOARD_PROVEEDOR = "dashboard_proveedor"
     const val EXPLORAR_GRUPOS = "explorar_grupos"
     const val MI_PERFIL = "mi_perfil"
     const val MIS_COMPRAS = "mis_compras"
     const val NOTIFICACIONES = "notificaciones"
-    const val MIS_PEDIDOS = "mis_pedidos"
     const val INVENTARIO = "inventario"
     const val ANALITICA = "analitica"
-    const val PEDIDOS_PROVEEDOR = "pedidos_proveedor"
-    const val OPORTUNIDADES_PROVEEDOR = "oportunidades_proveedor"
+    const val VENTAS_PROVEEDOR = "ventas_proveedor"
     const val CATALOGO_PROVEEDOR = "catalogo_proveedor"
 
     // Rutas con argumentos.
@@ -61,6 +80,14 @@ object Rutas {
     const val ELEGIR_CANTIDAD = "elegir_cantidad/{grupoId}"
     const val CONFIRMAR_PARTICIPACION = "confirmar_participacion/{grupoId}/{cantidad}"
     const val CONFIRMACION_PARTICIPACION = "confirmacion_participacion/{grupoId}/{cantidad}"
+
+    // Roles posibles que se eligen antes de autenticarse y se pasan como argumento a login/registro.
+    const val ROL_COMPRADOR = "comprador"
+    const val ROL_PROVEEDOR = "proveedor"
+
+    // login/registro reciben el rol elegido en SeleccionRol para saber a dónde ir tras autenticarse.
+    fun login(rol: String) = "login/$rol"
+    fun registro(rol: String) = "registro/$rol"
 
     // nueva_oportunidad sirve tanto para crear (sin id) como para editar (con id).
     fun nuevaOportunidad(oportunidadId: String? = null) =
@@ -96,60 +123,148 @@ class MainActivity : ComponentActivity() {
 private fun MiniMaxNavHost() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Rutas.ONBOARDING) {
+    // Ruta actual (sin argumentos) para decidir qué barras mostrar y qué pestaña resaltar.
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val rutaActual = rutaBase(backStackEntry?.destination?.route)
+
+    // El rol del usuario logueado define qué bottom bar / menú lateral corresponde.
+    val usuario by UsuarioRepository.usuarioActual.collectAsState()
+    val rol = usuario?.rol ?: Rutas.ROL_COMPRADOR
+    val esProveedor = rol == Rutas.ROL_PROVEEDOR
+    val tabs = if (esProveedor) proveedorTabs else compradorTabs
+    val rolHome = if (esProveedor) Rutas.DASHBOARD_PROVEEDOR else Rutas.HOME
+    val nombreUsuario = usuario?.nombre ?: "MiniMax"
+
+    val mostrarBarras = rutaActual in rutasConBarras
+    val esRaiz = tabs.any { rutaBase(it.route) == rutaActual }
+
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    // Navegación de pestañas/menú: reemplaza el tope del back stack guardando estado, de modo que
+    // alternar entre secciones no apile pantallas y "volver" regrese siempre al dashboard del rol.
+    fun navegarASeccion(route: String) {
+        navController.navigate(route) {
+            popUpTo(rolHome) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    fun cerrarSesion() {
+        UsuarioRepository.cerrarSesion()
+        navController.navigate(Rutas.SELECCION_ROL) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = mostrarBarras && drawerState.isOpen,
+        drawerContent = {
+            ShellDrawerContent(
+                rol = rol,
+                rutaActual = rutaActual,
+                nombreUsuario = nombreUsuario,
+                onItemClick = { route ->
+                    scope.launch { drawerState.close() }
+                    navegarASeccion(route)
+                },
+                onCerrarSesion = {
+                    scope.launch { drawerState.close() }
+                    cerrarSesion()
+                }
+            )
+        }
+    ) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                if (mostrarBarras) {
+                    ShellTopBar(
+                        subtitulo = subtituloDe(rutaActual),
+                        esRaiz = esRaiz,
+                        iniciales = inicialesDe(nombreUsuario),
+                        fotoUri = usuario?.fotoUri,
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        onBackClick = { navController.navigateUp() },
+                        onNotificacionesClick = { navController.navigate(Rutas.NOTIFICACIONES) },
+                        onPerfilClick = { navegarASeccion(Rutas.MI_PERFIL) }
+                    )
+                }
+            },
+            bottomBar = {
+                if (mostrarBarras) {
+                    ShellBottomBar(
+                        tabs = tabs,
+                        rutaActual = rutaActual,
+                        onTabSelected = { route -> navegarASeccion(route) }
+                    )
+                }
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = Rutas.ONBOARDING,
+                modifier = Modifier.padding(innerPadding)
+            ) {
 
         composable(Rutas.ONBOARDING) {
             OnboardingScreen(
-                onFinish = { navController.navigate(Rutas.LOGIN) }
-            )
-        }
-
-        composable(Rutas.LOGIN) {
-            LoginScreen(
-                onLoginExitoso = {
-                    // Login exitoso limpia Onboarding/Login del back stack.
-                    navController.navigate(Rutas.SELECCION_ROL) {
-                        popUpTo(Rutas.ONBOARDING) { inclusive = true }
-                    }
-                },
-                onIrARegistro = { navController.navigate(Rutas.REGISTRO) }
-            )
-        }
-
-        composable(Rutas.REGISTRO) {
-            RegistroScreen(
-                onRegistroExitoso = {
-                    // Tras registrarse, el usuario inicia sesión explícitamente.
-                    navController.navigate(Rutas.LOGIN) {
-                        popUpTo(Rutas.LOGIN) { inclusive = true }
-                    }
-                },
-                onIrALogin = { navController.popBackStack() }
+                // Primero se elige el rol; recién después se inicia sesión o se registra.
+                onFinish = { navController.navigate(Rutas.SELECCION_ROL) }
             )
         }
 
         composable(Rutas.SELECCION_ROL) {
             SeleccionRolScreen(
-                onCompradorClick = { navController.navigate(Rutas.HOME) },
-                onProveedorClick = { navController.navigate(Rutas.DASHBOARD_PROVEEDOR) }
+                onCompradorClick = { navController.navigate(Rutas.login(Rutas.ROL_COMPRADOR)) },
+                onProveedorClick = { navController.navigate(Rutas.login(Rutas.ROL_PROVEEDOR)) }
+            )
+        }
+
+        composable(
+            route = Rutas.LOGIN,
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol").orEmpty()
+            LoginScreen(
+                rol = rol,
+                onLoginExitoso = {
+                    // El rol se eligió antes de autenticarse; se aplica al usuario ya logueado.
+                    UsuarioRepository.setRol(rol)
+                    val destino = if (rol == Rutas.ROL_PROVEEDOR) Rutas.DASHBOARD_PROVEEDOR else Rutas.HOME
+                    // Limpia todo el flujo previo (onboarding/rol/login) del back stack.
+                    navController.navigate(destino) {
+                        popUpTo(Rutas.ONBOARDING) { inclusive = true }
+                    }
+                },
+                onIrARegistro = { navController.navigate(Rutas.registro(rol)) },
+                // Volver a la selección de rol (queda directamente debajo en el back stack).
+                onCambiarRol = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Rutas.REGISTRO,
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol").orEmpty()
+            RegistroScreen(
+                rol = rol,
+                // Tras registrarse, el usuario vuelve a Login (manteniendo el rol elegido).
+                onRegistroExitoso = { navController.popBackStack() },
+                onIrALogin = { navController.popBackStack() },
+                // "Cambiar rol" salta hasta la selección de rol (saltea Login en el back stack).
+                onCambiarRol = { navController.popBackStack(Rutas.SELECCION_ROL, inclusive = false) }
             )
         }
 
         composable(Rutas.HOME) {
             HomeScreen(
                 onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
-                onGruposClick = { navController.navigate(Rutas.EXPLORAR_GRUPOS) },
-                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
-                onMisComprasClick = { navController.navigate(Rutas.MIS_COMPRAS) },
-                onInventarioClick = { navController.navigate(Rutas.INVENTARIO) },
-                onAnaliticaClick = { navController.navigate(Rutas.ANALITICA) },
-                onNotificacionesClick = { navController.navigate(Rutas.NOTIFICACIONES) },
-                onCerrarSesion = {
-                    // Cerrar sesión vuelve a Login y limpia todo el back stack.
-                    navController.navigate(Rutas.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
+                onVerGruposClick = { navegarASeccion(Rutas.EXPLORAR_GRUPOS) }
             )
         }
 
@@ -158,17 +273,7 @@ private fun MiniMaxNavHost() {
                 onNuevaOportunidadClick = { navController.navigate(Rutas.nuevaOportunidad()) },
                 onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
                 onOportunidadEditClick = { id -> navController.navigate(Rutas.nuevaOportunidad(id)) },
-                onPedidosClick = { navController.navigate(Rutas.PEDIDOS_PROVEEDOR) },
-                onOportunidadesClick = { navController.navigate(Rutas.OPORTUNIDADES_PROVEEDOR) },
-                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
-                onNotificacionesClick = { navController.navigate(Rutas.NOTIFICACIONES) },
-                onCatalogoClick = { navController.navigate(Rutas.CATALOGO_PROVEEDOR) },
-                onCerrarSesion = {
-                    // Mismo comportamiento que el comprador: vuelve a Login limpiando el back stack.
-                    navController.navigate(Rutas.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
+                onCatalogoClick = { navegarASeccion(Rutas.CATALOGO_PROVEEDOR) }
             )
         }
 
@@ -185,18 +290,14 @@ private fun MiniMaxNavHost() {
             val oportunidadId = backStackEntry.arguments?.getString("oportunidadId")
             NuevaOportunidadScreen(
                 oportunidadId = oportunidadId,
-                onBackClick = { navController.popBackStack() },
-                onPublicadoOk = { navController.popBackStack() }
+                onPublicadoOk = { navController.popBackStack() },
+                onCancelar = { navController.popBackStack() }
             )
         }
 
         composable(Rutas.EXPLORAR_GRUPOS) {
             ExplorarGruposScreen(
-                onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
-                onHomeClick = { navController.popBackStack() },
-                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
-                onPedidosClick = { navController.navigate(Rutas.MIS_PEDIDOS) },
-                onInventarioClick = { navController.navigate(Rutas.INVENTARIO) }
+                onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) }
             )
         }
 
@@ -275,43 +376,35 @@ private fun MiniMaxNavHost() {
         }
 
         composable(Rutas.MI_PERFIL) {
-            MiPerfilScreen(
-                onBack = { navController.popBackStack() }
-            )
+            MiPerfilScreen()
         }
 
         composable(Rutas.MIS_COMPRAS) {
             MisComprasScreen(
-                onBackClick = { navController.popBackStack() }
+                onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) }
             )
         }
 
         composable(Rutas.NOTIFICACIONES) {
-            NotificacionesScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Rutas.MIS_PEDIDOS) {
-            MisPedidosScreen(onBack = { navController.popBackStack() })
+            NotificacionesScreen()
         }
 
         composable(Rutas.INVENTARIO) {
-            InventarioScreen(onBack = { navController.popBackStack() })
+            InventarioScreen()
         }
 
         composable(Rutas.ANALITICA) {
-            AnaliticaScreen(onBack = { navController.popBackStack() })
+            AnaliticaScreen()
         }
 
-        composable(Rutas.PEDIDOS_PROVEEDOR) {
-            PedidosProveedorScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Rutas.OPORTUNIDADES_PROVEEDOR) {
-            OportunidadesProveedorScreen(onBack = { navController.popBackStack() })
+        composable(Rutas.VENTAS_PROVEEDOR) {
+            VentasProveedorScreen()
         }
 
         composable(Rutas.CATALOGO_PROVEEDOR) {
-            CatalogoProveedorScreen(onBack = { navController.popBackStack() })
+            CatalogoProveedorScreen()
+        }
+            }
         }
     }
 }

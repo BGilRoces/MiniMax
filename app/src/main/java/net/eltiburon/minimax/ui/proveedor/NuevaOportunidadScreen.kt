@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,8 +41,8 @@ private val categorias = listOf(
 @Composable
 fun NuevaOportunidadScreen(
     oportunidadId: String? = null,
-    onBackClick: () -> Unit = {},
     onPublicadoOk: () -> Unit = {},
+    onCancelar: () -> Unit = {},
     viewModel: NuevaOportunidadViewModel = viewModel()
 ) {
     val esEdicion = oportunidadId != null
@@ -164,18 +163,13 @@ fun NuevaOportunidadScreen(
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido
+    // (más un SnackbarHost propio para los avisos de guardado/publicación).
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 36.dp)
         ) {
-            item { NuevaOportunidadHeader(onBackClick = onBackClick) }
-
             item { TituloBlock(esEdicion = esEdicion) }
 
             item {
@@ -222,11 +216,7 @@ fun NuevaOportunidadScreen(
             item {
                 BotonesAccion(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    onGuardar = {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Borrador guardado")
-                        }
-                    },
+                    onCancelar = onCancelar,
                     esEdicion = esEdicion,
                     onPublicar = {
                         viewModel.publicar(oportunidadId) { exito, mensaje ->
@@ -237,52 +227,10 @@ fun NuevaOportunidadScreen(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .statusBarsPadding()
-            .padding(horizontal = 4.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondary),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "MiniMax",
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -673,7 +621,7 @@ private fun campoColors() = OutlinedTextFieldDefaults.colors(
 private fun BotonesAccion(
     modifier: Modifier = Modifier,
     esEdicion: Boolean,
-    onGuardar: () -> Unit,
+    onCancelar: () -> Unit,
     onPublicar: () -> Unit
 ) {
     Row(
@@ -681,7 +629,7 @@ private fun BotonesAccion(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OutlinedButton(
-            onClick = onGuardar,
+            onClick = onCancelar,
             modifier = Modifier
                 .weight(1f)
                 .height(50.dp),
@@ -690,12 +638,12 @@ private fun BotonesAccion(
             border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary)
         ) {
             Icon(
-                imageVector = Icons.Filled.Save,
+                imageVector = Icons.Filled.Close,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Guardar", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Text("Cancelar", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         }
 
         Button(

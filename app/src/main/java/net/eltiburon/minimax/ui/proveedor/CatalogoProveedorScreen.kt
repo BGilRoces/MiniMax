@@ -20,25 +20,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.ui.common.MiniMaxTopBar
+import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
 
 @Composable
 fun CatalogoProveedorScreen(
-    onBack: () -> Unit = {},
     viewModel: CatalogoProveedorViewModel = viewModel()
 ) {
     val catalogo by viewModel.catalogo.collectAsState()
     val busqueda by viewModel.busqueda.collectAsState()
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Catálogo completo", onBackClick = onBack) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground)
+    ) {
             Column(
                 modifier = Modifier
                     .background(Color.White)
@@ -78,7 +75,6 @@ fun CatalogoProveedorScreen(
                     CatalogoItemCard(producto)
                 }
             }
-        }
     }
 }
 
@@ -96,19 +92,29 @@ private fun CatalogoItemCard(producto: ProductoCatalogo) {
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MiniMaxPrimary.copy(alpha = 0.08f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Inventory2,
-                    contentDescription = null,
-                    tint = MiniMaxPrimary,
-                    modifier = Modifier.size(22.dp)
+            val uri = producto.imagenUri
+            if (uri != null) {
+                UriImage(
+                    uri = uri,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MiniMaxPrimary.copy(alpha = 0.08f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Inventory2,
+                        contentDescription = null,
+                        tint = MiniMaxPrimary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {

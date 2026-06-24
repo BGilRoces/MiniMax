@@ -30,8 +30,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.UsuarioRepository
+import net.eltiburon.minimax.model.EstadisticasComprador
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.GrupoActivo
+import net.eltiburon.minimax.model.formatearPesos
 import net.eltiburon.minimax.model.GrupoRecomendado
 import net.eltiburon.minimax.ui.theme.*
 
@@ -53,8 +55,7 @@ private enum class DrawerNavItem(val label: String, val icon: ImageVector) {
     GRUPOS_ACTIVOS("Grupos Activos", Icons.Filled.Group),
     INVENTARIO("Inventario", Icons.Filled.Inventory2),
     ANALITICA("Analítica", Icons.Filled.BarChart),
-    MI_PERFIL("Mi Perfil", Icons.Filled.Person),
-    CONFIGURACION("Configuración", Icons.Filled.Settings)
+    MI_PERFIL("Mi Perfil", Icons.Filled.Person)
 }
 
 // ── Pantalla principal ───────────────────────────────────────────────────────
@@ -62,89 +63,30 @@ private enum class DrawerNavItem(val label: String, val icon: ImageVector) {
 @Composable
 fun HomeScreen(
     onGrupoClick: (String) -> Unit = {},
-    onGruposClick: () -> Unit = {},
-    onPerfilClick: () -> Unit = {},
-    onMisComprasClick: () -> Unit = {},
-    onInventarioClick: () -> Unit = {},
-    onAnaliticaClick: () -> Unit = {},
-    onNotificacionesClick: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {},
+    onVerGruposClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val gruposActivos by viewModel.gruposActivos.collectAsState()
     // La lista ya viene filtrada desde el ViewModel; la UI solo la muestra.
     val gruposFiltrados by viewModel.gruposRecomendados.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val estadisticas by viewModel.estadisticas.collectAsState()
 
-    // rememberSaveable: la pestaña seleccionada sobrevive a la rotación de pantalla.
-    var selectedTab by rememberSaveable { mutableStateOf(NavTab.DASHBOARD) }
-    var activeDrawerItem by rememberSaveable { mutableStateOf(DrawerNavItem.DASHBOARD) }
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            MiniMaxDrawerContent(
-                activeItem = activeDrawerItem,
-                onItemClick = { item ->
-                    scope.launch { drawerState.close() }
-                    activeDrawerItem = item
-                    when (item) {
-                        DrawerNavItem.MI_PERFIL -> onPerfilClick()
-                        DrawerNavItem.MIS_PEDIDOS -> onMisComprasClick()
-                        DrawerNavItem.GRUPOS_ACTIVOS -> onGruposClick()
-                        DrawerNavItem.INVENTARIO -> onInventarioClick()
-                        DrawerNavItem.ANALITICA -> onAnaliticaClick()
-                        DrawerNavItem.DASHBOARD -> { /* ya estamos aquí */ }
-                        DrawerNavItem.CONFIGURACION -> { /* requiere persistencia: pendiente de backend */ }
-                    }
-                },
-                onCerrarSesion = {
-                    scope.launch { drawerState.close() }
-                    onCerrarSesion()
-                }
-            )
-        }
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                MiniMaxBottomBar(
-                    selectedTab = selectedTab,
-                    onTabSelected = { tab ->
-                        when (tab) {
-                            NavTab.PERFIL -> onPerfilClick()
-                            NavTab.GRUPOS -> onGruposClick()
-                            NavTab.PEDIDOS -> onMisComprasClick()
-                            NavTab.INVENTARIO -> onInventarioClick()
-                            else -> selectedTab = tab
-                        }
-                    }
-                )
-            }
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
-            ) {
-                item {
-                    HomeHeader(
-                        onMenuClick = { scope.launch { drawerState.open() } },
-                        onNotificacionesClick = onNotificacionesClick
-                    )
-                }
-                item { SavingsBanner() }
-                item { GruposActivosSection(gruposActivos, onGrupoClick, onGruposClick) }
-                item {
-                    GruposRecomendadosSection(
-                        grupos = gruposFiltrados,
-                        searchQuery = searchQuery,
-                        onSearchChange = viewModel::onSearchQueryChange,
-                        onGrupoClick = onGrupoClick
-                    )
-                }
-            }
+        item { SavingsBanner(estadisticas) }
+        item { GruposActivosSection(gruposActivos, onGrupoClick, onVerGruposClick) }
+        item {
+            GruposRecomendadosSection(
+                grupos = gruposFiltrados,
+                searchQuery = searchQuery,
+                onSearchChange = viewModel::onSearchQueryChange,
+                onGrupoClick = onGrupoClick
+            )
         }
     }
 }
@@ -175,8 +117,7 @@ private fun MiniMaxDrawerContent(
                     DrawerNavItem.ANALITICA
                 )
                 val secondaryItems = listOf(
-                    DrawerNavItem.MI_PERFIL,
-                    DrawerNavItem.CONFIGURACION
+                    DrawerNavItem.MI_PERFIL
                 )
 
                 mainItems.forEach { item ->
@@ -394,7 +335,7 @@ private fun HomeHeader(onMenuClick: () -> Unit = {}, onNotificacionesClick: () -
 // ── Banner de ahorros ────────────────────────────────────────────────────────
 
 @Composable
-private fun SavingsBanner() {
+private fun SavingsBanner(estadisticas: EstadisticasComprador) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -417,14 +358,17 @@ private fun SavingsBanner() {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "$12.450",
+                    text = formatearPesos(estadisticas.totalAhorrado),
                     color = MaterialTheme.colorScheme.onTertiary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 34.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Este mes ahorraste $3.200 más",
+                    text = if (estadisticas.ahorroEsteMes > 0)
+                        "Este mes ahorraste ${formatearPesos(estadisticas.ahorroEsteMes)} más"
+                    else
+                        "Sumá compras para empezar a ahorrar",
                     color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.75f),
                     fontSize = 12.sp
                 )
@@ -711,38 +655,6 @@ private fun GrupoRecomendadoItem(grupo: GrupoRecomendado, onGrupoClick: (String)
                     )
                 }
             }
-        }
-    }
-}
-
-// ── Bottom Navigation ────────────────────────────────────────────────────────
-
-@Composable
-private fun MiniMaxBottomBar(selectedTab: NavTab, onTabSelected: (NavTab) -> Unit) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
-    ) {
-        NavTab.entries.forEach { tab ->
-            NavigationBarItem(
-                selected = selectedTab == tab,
-                onClick = { onTabSelected(tab) },
-                icon = {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.label,
-                        modifier = Modifier.size(22.dp)
-                    )
-                },
-                alwaysShowLabel = false,
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
         }
     }
 }

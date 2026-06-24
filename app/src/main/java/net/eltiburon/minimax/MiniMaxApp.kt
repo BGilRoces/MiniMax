@@ -8,6 +8,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.data.ParticipacionRepository
+import net.eltiburon.minimax.data.UsuarioRepository
+import net.eltiburon.minimax.data.local.MIGRATION_1_2
+import net.eltiburon.minimax.data.local.MIGRATION_2_3
+import net.eltiburon.minimax.data.local.MIGRATION_3_4
 import net.eltiburon.minimax.data.local.MiniMaxDatabase
 
 /**
@@ -26,16 +30,18 @@ class MiniMaxApp : Application() {
             applicationContext,
             MiniMaxDatabase::class.java,
             "minimax.db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
 
         OportunidadRepository.init(database.oportunidadDao())
         ParticipacionRepository.init(database.participacionDao())
+        UsuarioRepository.init(database.usuarioDao())
 
         // Primera instalación: si la base está vacía, la precargamos con el catálogo demo
         // (antes vivía hardcodeado en los MutableStateFlow de cada repo).
         applicationScope.launch {
             OportunidadRepository.sembrarSiEstaVacia()
             ParticipacionRepository.sembrarSiEstaVacia()
+            UsuarioRepository.sembrarSiEstaVacia()
         }
     }
 }

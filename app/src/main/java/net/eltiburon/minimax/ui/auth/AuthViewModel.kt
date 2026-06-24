@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import net.eltiburon.minimax.data.NotificacionRepository
 import net.eltiburon.minimax.data.UsuarioRepository
 
 private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
@@ -56,7 +57,11 @@ class AuthViewModel : ViewModel() {
             _uiState.value = UiState.Loading
             delay(400)
             UsuarioRepository.login(emailValor, passwordValor).fold(
-                onSuccess = { _uiState.value = UiState.Success },
+                onSuccess = { usuario ->
+                    // Bandeja de notificaciones de la sesión: bienvenida + recomendación de grupo.
+                    NotificacionRepository.inicializarSesion(usuario.nombre)
+                    _uiState.value = UiState.Success
+                },
                 onFailure = { _uiState.value = UiState.Error(it.message ?: "No se pudo iniciar sesión") }
             )
         }

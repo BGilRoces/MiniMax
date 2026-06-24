@@ -29,11 +29,6 @@ import net.eltiburon.minimax.ui.theme.*
 
 @Composable
 fun ExplorarGruposScreen(
-    onBackClick: () -> Unit = {},
-    onHomeClick: () -> Unit = {},
-    onPerfilClick: () -> Unit = {},
-    onPedidosClick: () -> Unit = {},
-    onInventarioClick: () -> Unit = {},
     onGrupoClick: (String) -> Unit = {},
     viewModel: ExplorarGruposViewModel = viewModel()
 ) {
@@ -53,48 +48,48 @@ fun ExplorarGruposScreen(
         "Alimentos & Bebidas", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets"
     )
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            ExplorarTopBar(onBackClick = onBackClick, onFiltrosClick = { mostrarFiltros = true })
-        },
-        bottomBar = {
-            ExplorarBottomBar(
-                onHomeClick = onHomeClick,
-                onPerfilClick = onPerfilClick,
-                onPedidosClick = onPedidosClick,
-                onInventarioClick = onInventarioClick
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
             // Filtros y Búsqueda
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(vertical = 12.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = viewModel::onBusquedaChange,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    placeholder = { Text("¿Qué estás buscando?", fontSize = 14.sp) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedContainerColor = Color(0xFFF9FAFB),
-                        unfocusedContainerColor = Color(0xFFF9FAFB)
-                    ),
-                    singleLine = true
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = viewModel::onBusquedaChange,
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("¿Qué estás buscando?", fontSize = 14.sp) },
+                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedContainerColor = Color(0xFFF9FAFB)
+                        ),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = { mostrarFiltros = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.FilterList,
+                            contentDescription = "Filtros",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -150,7 +145,6 @@ fun ExplorarGruposScreen(
                     ExplorarGrupoCard(grupo, onGrupoClick)
                 }
             }
-        }
     }
 
     if (mostrarFiltros) {

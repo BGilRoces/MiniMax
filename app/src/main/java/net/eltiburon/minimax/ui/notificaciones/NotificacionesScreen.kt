@@ -20,28 +20,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.data.Notificacion
 import net.eltiburon.minimax.ui.common.MiniMaxTopBar
 import net.eltiburon.minimax.ui.theme.*
 
 @Composable
 fun NotificacionesScreen(
-    onBack: () -> Unit = {},
     viewModel: NotificacionesViewModel = viewModel()
 ) {
     val notificaciones by viewModel.notificaciones.collectAsState()
     val noLeidas = notificaciones.count { !it.leida }
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Notificaciones", onBackClick = onBack) }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -75,7 +72,6 @@ fun NotificacionesScreen(
                 }
             }
         }
-    }
 }
 
 @Composable
@@ -88,7 +84,9 @@ private fun NotificacionCard(notif: Notificacion, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = if (notif.leida) Color.White else MiniMaxAccent.copy(alpha = 0.06f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (notif.leida) 1.dp else 2.dp)
+        // Misma elevación para leídas y no leídas: las no abiertas ya no tienen ese borde/sombra
+        // gris más marcado; el estado sin leer se distingue por el fondo y el punto rojo.
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(modifier = Modifier.padding(14.dp)) {
             Box(

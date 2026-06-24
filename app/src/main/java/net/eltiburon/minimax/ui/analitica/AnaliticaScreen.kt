@@ -24,23 +24,19 @@ import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun AnaliticaScreen(
-    onBack: () -> Unit = {},
     viewModel: AnaliticaViewModel = viewModel()
 ) {
     val metricas by viewModel.metricas.collectAsState()
     val ahorroMensual by viewModel.ahorroMensual.collectAsState()
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Analítica", onBackClick = onBack) }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
             item {
                 Text(
                     text = "Resumen general",
@@ -72,7 +68,6 @@ fun AnaliticaScreen(
             }
 
             item { GraficoBarras(ahorroMensual) }
-        }
     }
 }
 

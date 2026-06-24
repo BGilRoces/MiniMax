@@ -1,7 +1,12 @@
 package net.eltiburon.minimax.ui.perfil
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -16,22 +21,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import net.eltiburon.minimax.model.formatearPesos
+import net.eltiburon.minimax.ui.camera.CameraCaptureScreen
+import net.eltiburon.minimax.ui.common.UriImage
+import net.eltiburon.minimax.ui.proveedor.MetricaProveedor
+import net.eltiburon.minimax.ui.proveedor.metricasProveedor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MiPerfilScreen(
-    onBack: () -> Unit = {},
     viewModel: MiPerfilViewModel = viewModel()
 ) {
     val usuario by viewModel.usuario.collectAsState()
+    val estadisticas by viewModel.estadisticas.collectAsState()
     val modoEdicion by viewModel.modoEdicion.collectAsState()
+    val fotoUri by viewModel.fotoUri.collectAsState()
     val nombre by viewModel.nombreEdit.collectAsState()
     val email by viewModel.emailEdit.collectAsState()
     val telefono by viewModel.telefonoEdit.collectAsState()
@@ -40,60 +53,91 @@ fun MiPerfilScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Mi Perfil",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
-                actions = {
-                    TextButton(onClick = viewModel::toggleEdicion) {
-                        Text(
-                            text = if (modoEdicion) "Cancelar" else "Editar",
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+    // ── Estado de cámara para la foto de perfil (mismo flujo que Nueva Oportunidad) ──────────
+    var mostrarCamara by remember { mutableStateOf(false) }
+    var mostrarPermisoDenegado by remember { mutableStateOf(false) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) mostrarCamara = true else mostrarPermisoDenegado = true
+    }
+
+    val pedirCamara: () -> Unit = {
+        val concedido = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (concedido) mostrarCamara = true
+        else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    if (mostrarCamara) {
+        CameraCaptureScreen(
+            onImageCaptured = { uri ->
+                viewModel.onFotoTomada(uri.toString())
+                mostrarCamara = false
+            },
+            onClose = { mostrarCamara = false }
+        )
+        return
+    }
+
+    if (mostrarPermisoDenegado) {
+        AlertDialog(
+            onDismissRequest = { mostrarPermisoDenegado = false },
+            confirmButton = {
+                TextButton(
+                    onClick = { mostrarPermisoDenegado = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
+                ) { Text("Entendido") }
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.NoPhotography,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
                 )
-            )
-        }
-    ) { innerPadding ->
+            },
+            title = { Text("Permiso de cámara necesario") },
+            text = {
+                Text(
+                    "Necesitamos acceso a la cámara para tomar tu foto de perfil. " +
+                        "Podés habilitar el permiso desde los ajustes de la aplicación."
+                )
+            }
+        )
+    }
+
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido
+    // (más un SnackbarHost propio para el aviso de guardado). El botón "Editar" pasó a la cabecera.
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 40.dp)
         ) {
             item {
-                AvatarSection(nombre = usuario.nombre)
+                AvatarSection(
+                    nombre = usuario.nombre,
+                    rolLabel = viewModel.rolLabel,
+                    fotoUri = fotoUri,
+                    modoEdicion = modoEdicion,
+                    onToggleEdicion = viewModel::toggleEdicion,
+                    onEditarFoto = pedirCamara
+                )
             }
             item {
-                StatsCard(
-                    totalAhorrado = usuario.totalAhorrado,
-                    gruposCompletados = usuario.gruposCompletados,
-                    pedidosRealizados = usuario.pedidosRealizados
-                )
+                // El proveedor no tiene ahorro ni pedidos: reutiliza las métricas del dashboard.
+                if (viewModel.esProveedor) {
+                    ProveedorStatsCard(metricas = metricasProveedor())
+                } else {
+                    StatsCard(
+                        totalAhorrado = estadisticas.totalAhorrado,
+                        gruposCompletados = estadisticas.gruposCompletados,
+                        pedidosRealizados = estadisticas.pedidosRealizados
+                    )
+                }
             }
             item {
                 FormSection(
@@ -141,13 +185,24 @@ fun MiPerfilScreen(
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AvatarSection(nombre: String) {
+private fun AvatarSection(
+    nombre: String,
+    rolLabel: String,
+    fotoUri: String?,
+    modoEdicion: Boolean,
+    onToggleEdicion: () -> Unit,
+    onEditarFoto: () -> Unit
+) {
     val initials = nombre.trim().split(" ")
         .take(2)
         .mapNotNull { it.firstOrNull()?.uppercaseChar() }
@@ -157,26 +212,43 @@ private fun AvatarSection(nombre: String) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 24.dp, vertical = 28.dp),
+            .padding(horizontal = 24.dp)
+            .padding(top = 12.dp, bottom = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // El botón Editar/Cancelar vivía en la top bar; al unificarla pasó a la cabecera del perfil.
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onToggleEdicion) {
+                Text(
+                    text = if (modoEdicion) "Cancelar" else "Editar",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .size(88.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.secondary)
-                .border(3.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f), CircleShape),
+                .border(3.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f), CircleShape)
+                .clickable(onClick = onEditarFoto),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = initials,
-                color = MaterialTheme.colorScheme.onSecondary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp
-            )
+            if (fotoUri != null) {
+                UriImage(uri = fotoUri, modifier = Modifier.fillMaxSize())
+            } else {
+                Text(
+                    text = initials,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 32.sp
+                )
+            }
         }
 
-        TextButton(onClick = {}) {
+        TextButton(onClick = onEditarFoto) {
             Icon(
                 imageVector = Icons.Filled.CameraAlt,
                 contentDescription = null,
@@ -205,7 +277,7 @@ private fun AvatarSection(nombre: String) {
                 .padding(horizontal = 14.dp, vertical = 5.dp)
         ) {
             Text(
-                text = "Comprador",
+                text = rolLabel,
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
@@ -222,7 +294,7 @@ private fun StatsCard(
     gruposCompletados: Int,
     pedidosRealizados: Int
 ) {
-    val ahorradoStr = "\$%,.0f".format(totalAhorrado).replace(",", ".")
+    val ahorradoStr = formatearPesos(totalAhorrado)
 
     Card(
         modifier = Modifier
@@ -283,6 +355,73 @@ private fun StatItem(value: String, label: String, color: Color) {
             textAlign = TextAlign.Center,
             lineHeight = 15.sp
         )
+    }
+}
+
+// ── Estadísticas del proveedor (reutiliza las métricas del dashboard) ─────────
+
+@Composable
+private fun ProveedorStatsCard(metricas: List<MetricaProveedor>) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            metricas.chunked(2).forEachIndexed { index, fila ->
+                if (index > 0) Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    fila.forEach { metrica ->
+                        ProveedorStatItem(metrica = metrica, modifier = Modifier.weight(1f))
+                    }
+                    if (fila.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProveedorStatItem(metrica: MetricaProveedor, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(metrica.color.copy(alpha = 0.14f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = metrica.icon,
+                contentDescription = null,
+                tint = metrica.color,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Column {
+            Text(
+                text = metrica.valor,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Text(
+                text = metrica.titulo,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 11.sp,
+                lineHeight = 13.sp
+            )
+        }
     }
 }
 

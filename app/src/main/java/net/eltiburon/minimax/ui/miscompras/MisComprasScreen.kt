@@ -2,9 +2,12 @@ package net.eltiburon.minimax.ui.miscompras
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory2
@@ -24,72 +27,82 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.model.EstadoCompra
 import net.eltiburon.minimax.model.Oportunidad
-import net.eltiburon.minimax.ui.common.MiniMaxTopBar
 import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
 
-private val TABS = listOf(EstadoCompra.ACTIVA, EstadoCompra.COMPLETADA, EstadoCompra.CANCELADA)
-
 @Composable
 fun MisComprasScreen(
-    onBackClick: () -> Unit = {},
+    onGrupoClick: (String) -> Unit = {},
     viewModel: MisComprasViewModel = viewModel()
 ) {
-    val tabSeleccionada by viewModel.tabSeleccionada.collectAsState()
+    val filtro by viewModel.filtroEstado.collectAsState()
     val compras by viewModel.comprasFiltradas.collectAsState()
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-        ) {
-            MiniMaxTopBar(subtitulo = "Mis compras", onBackClick = onBackClick)
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        FiltroEstadoRow(filtro = filtro, onFiltroChange = viewModel::onFiltroChange)
 
-            TabRow(
-                selectedTabIndex = TABS.indexOf(tabSeleccionada),
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
+        if (compras.isEmpty()) {
+            EmptyState(modifier = Modifier.fillMaxSize().weight(1f))
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().weight(1f),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                TABS.forEach { estado ->
-                    Tab(
-                        selected = tabSeleccionada == estado,
-                        onClick = { viewModel.onTabChange(estado) },
-                        text = {
-                            Text(
-                                text = tituloTab(estado),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                items(compras, key = { it.participacionId }) { compra ->
+                    CompraCard(
+                        compra = compra,
+                        onCancelar = { viewModel.cancelar(compra.participacionId) },
+                        onClick = { onGrupoClick(compra.oportunidad.id) }
                     )
-                }
-            }
-
-            if (compras.isEmpty()) {
-                EmptyState(modifier = Modifier.fillMaxSize().weight(1f))
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().weight(1f),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(compras, key = { it.participacionId }) { compra ->
-                        CompraCard(
-                            compra = compra,
-                            onCancelar = { viewModel.cancelar(compra.participacionId) }
-                        )
-                    }
                 }
             }
         }
     }
 }
 
-private fun tituloTab(estado: EstadoCompra): String = when (estado) {
-    EstadoCompra.ACTIVA -> "Activas"
-    EstadoCompra.COMPLETADA -> "Completadas"
-    EstadoCompra.CANCELADA -> "Canceladas"
+@Composable
+private fun FiltroEstadoRow(filtro: EstadoCompra?, onFiltroChange: (EstadoCompra?) -> Unit) {
+    Row(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FiltroChip(texto = "Todos", seleccionado = filtro == null, onClick = { onFiltroChange(null) })
+        EstadoCompra.entries.forEach { estado ->
+            FiltroChip(
+                texto = estado.label,
+                seleccionado = filtro == estado,
+                onClick = { onFiltroChange(estado) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FiltroChip(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (seleccionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = texto,
+            color = if (seleccionado) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 13.sp,
+            fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium
+        )
+    }
 }
 
 @Composable
@@ -107,7 +120,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No tenés compras en esta categoría",
+            text = "No tenés pedidos en este estado",
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
@@ -117,7 +130,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
+private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit, onClick: () -> Unit) {
     var mostrarConfirmacion by remember { mutableStateOf(false) }
 
     if (mostrarConfirmacion) {
@@ -143,7 +156,9 @@ private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
     val oportunidad = compra.oportunidad
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

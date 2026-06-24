@@ -15,14 +15,19 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import net.eltiburon.minimax.R
 import androidx.exifinterface.media.ExifInterface
+import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.graphics.BitmapFactory
 
 /**
- * Carga el [uri] (archivo interno, por ejemplo una foto tomada con la cámara) y lo muestra
- * decodificado a bitmap, respetando la orientación EXIF.
+ * Carga el [uri] y lo muestra. Soporta dos orígenes:
+ *  - URLs http(s) (las imágenes mock del catálogo demo, ver MockImagenes): se delegan a Coil.
+ *  - Archivos internos `content://`/`file://` (una foto tomada con la cámara): se decodifican a
+ *    bitmap respetando la orientación EXIF.
  *
  * Antes vivía solo dentro de NuevaOportunidadScreen; se extrajo a ui.common porque
  * GrupoDetalleScreen también necesita mostrar la foto real del producto cuando la
@@ -30,6 +35,21 @@ import android.graphics.BitmapFactory
  */
 @Composable
 fun UriImage(uri: String, modifier: Modifier = Modifier) {
+    if (uri.startsWith("http")) {
+        // loremflickr (catálogo demo) responde 500 de forma intermitente; ante un fallo de
+        // red mostramos el drawable genérico en lugar de un hueco vacío.
+        val fallback = painterResource(id = R.drawable.aceite)
+        AsyncImage(
+            model = uri,
+            contentDescription = "Imagen del producto",
+            modifier = modifier,
+            contentScale = ContentScale.Crop,
+            placeholder = fallback,
+            error = fallback
+        )
+        return
+    }
+
     val context = LocalContext.current
     var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
 

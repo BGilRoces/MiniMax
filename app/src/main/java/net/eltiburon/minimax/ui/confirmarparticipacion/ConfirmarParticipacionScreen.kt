@@ -507,16 +507,10 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Seña pendiente / Demo",
+                            text = "Tarjeta",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Pago simulado para MVP universitario",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Icon(

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import net.eltiburon.minimax.data.NotificacionRepository
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.data.ParticipacionRepository
 import net.eltiburon.minimax.data.UsuarioRepository
@@ -64,6 +65,8 @@ class ResumenParticipacionViewModel : ViewModel() {
                     usuarioEmail = email,
                     cantidad = cantidad
                 )
+                // El comprador se comprometió: notificamos aunque el grupo aún no esté cerrado.
+                NotificacionRepository.emitirCompra(_producto.value.nombre, cantidad)
             }
             onListo()
         }

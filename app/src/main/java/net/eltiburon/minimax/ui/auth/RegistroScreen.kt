@@ -26,8 +26,10 @@ import net.eltiburon.minimax.ui.theme.*
 
 @Composable
 fun RegistroScreen(
+    rol: String = "comprador",
     onRegistroExitoso: () -> Unit = {},
     onIrALogin: () -> Unit = {},
+    onCambiarRol: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
     val nombre by viewModel.nombre.collectAsState()
@@ -51,6 +53,11 @@ fun RegistroScreen(
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
+        VolverRolButton(
+            onClick = onCambiarRol,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,12 +86,16 @@ fun RegistroScreen(
                 lineHeight = 20.sp
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            RolIndicatorChip(rol = rol, onClick = onCambiarRol)
+
             Spacer(modifier = Modifier.height(28.dp))
 
             OutlinedTextField(
                 value = nombre,
                 onValueChange = viewModel::onNombreChange,
-                label = { Text("Nombre") },
+                label = { Text("Nombre completo") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),

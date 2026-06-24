@@ -26,8 +26,10 @@ data class CompraUi(
 
 class MisComprasViewModel : ViewModel() {
 
-    private val _tabSeleccionada = MutableStateFlow(EstadoCompra.ACTIVA)
-    val tabSeleccionada: StateFlow<EstadoCompra> = _tabSeleccionada.asStateFlow()
+    // null = "Todos". Se filtra en el VM; la UI solo recibe la lista ya filtrada,
+    // siguiendo el mismo patrón de chips de Explorar Grupos.
+    private val _filtroEstado = MutableStateFlow<EstadoCompra?>(null)
+    val filtroEstado: StateFlow<EstadoCompra?> = _filtroEstado.asStateFlow()
 
     // Cruza las participaciones del usuario actual con el catálogo de oportunidades.
     // Si una oportunidad fue borrada del catálogo, la compra se omite (mapNotNull).
@@ -58,12 +60,13 @@ class MisComprasViewModel : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val comprasFiltradas: StateFlow<List<CompraUi>> = combine(
-        comprasDelUsuario, _tabSeleccionada
-    ) { compras, tab -> compras.filter { it.estado == tab } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        comprasDelUsuario, _filtroEstado
+    ) { compras, filtro ->
+        if (filtro == null) compras else compras.filter { it.estado == filtro }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onTabChange(estado: EstadoCompra) {
-        _tabSeleccionada.value = estado
+    fun onFiltroChange(estado: EstadoCompra?) {
+        _filtroEstado.value = estado
     }
 
     fun cancelar(participacionId: String) {

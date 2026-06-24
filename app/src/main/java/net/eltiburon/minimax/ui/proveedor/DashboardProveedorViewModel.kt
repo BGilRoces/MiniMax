@@ -26,7 +26,8 @@ data class ProductoCatalogo(
     val id: String,
     val nombre: String,
     val unidades: Int,
-    val precio: String
+    val precio: String,
+    val imagenUri: String? = null
 )
 
 /**
@@ -48,7 +49,8 @@ class DashboardProveedorViewModel : ViewModel() {
                     id = oportunidad.id,
                     nombre = oportunidad.nombre,
                     unidades = oportunidad.stockDisponible,
-                    precio = formatearPrecio(oportunidad.precioMayorista)
+                    precio = formatearPrecio(oportunidad.precioMayorista),
+                    imagenUri = oportunidad.imagenUri
                 )
             }
         }

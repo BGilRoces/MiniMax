@@ -6,12 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,20 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import net.eltiburon.minimax.data.UsuarioRepository
+import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom-nav tabs del proveedor
-// ─────────────────────────────────────────────────────────────────────────────
-
-private enum class NavTabProveedor(val label: String, val icon: ImageVector) {
-    DASHBOARD("Dashboard", Icons.Filled.Home),
-    PEDIDOS("Pedidos", Icons.Filled.ShoppingBag),
-    NUEVA_ORDEN("Nueva orden", Icons.Filled.AddCircle),
-    OPORTUNIDADES("Oportunidades", Icons.Filled.Storefront),
-    PERFIL("Perfil", Icons.Filled.Person)
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pantalla principal
@@ -47,20 +32,12 @@ fun DashboardProveedorScreen(
     onNuevaOportunidadClick: () -> Unit = {},
     onOportunidadClick: (String) -> Unit = {},
     onOportunidadEditClick: (String) -> Unit = {},
-    onPedidosClick: () -> Unit = {},
-    onOportunidadesClick: () -> Unit = {},
-    onPerfilClick: () -> Unit = {},
-    onNotificacionesClick: () -> Unit = {},
     onCatalogoClick: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {},
     viewModel: DashboardProveedorViewModel = viewModel()
 ) {
     // Los datos (pedidos y catálogo) bajan desde el ViewModel.
     val pedidosPendientes by viewModel.pedidosPendientes.collectAsState()
     val catalogo by viewModel.catalogo.collectAsState()
-
-    // rememberSaveable: la pestaña seleccionada sobrevive a la rotación.
-    var selectedTab by rememberSaveable { mutableStateOf(NavTabProveedor.DASHBOARD) }
 
     // Id pendiente de confirmación de borrado (null = no se está mostrando el diálogo).
     var idAEliminar by remember { mutableStateOf<String?>(null) }
@@ -90,34 +67,10 @@ fun DashboardProveedorScreen(
         )
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            ProveedorBottomBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    when (tab) {
-                        NavTabProveedor.NUEVA_ORDEN -> onNuevaOportunidadClick()
-                        NavTabProveedor.PEDIDOS -> onPedidosClick()
-                        NavTabProveedor.OPORTUNIDADES -> onOportunidadesClick()
-                        NavTabProveedor.PERFIL -> onPerfilClick()
-                        else -> selectedTab = tab
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
-        ) {
-            item {
-                ProveedorHeader(
-                    onNotificacionesClick = onNotificacionesClick,
-                    onCerrarSesion = onCerrarSesion
-                )
-            }
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido
+    // (más un SnackbarHost propio para los avisos de validación de lotes).
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
             item {
@@ -136,6 +89,10 @@ fun DashboardProveedorScreen(
                 )
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 
     pedidoAValidar?.let { pedido ->
@@ -158,102 +115,6 @@ fun DashboardProveedorScreen(
                 }
             }
         )
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Header
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ProveedorHeader(
-    onNotificacionesClick: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .statusBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Hamburguesa + Logo
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { /* drawer futuro */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = "Abrir menú",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.secondary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "M",
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "MiniMax",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
-
-            // Notificaciones + Avatar + Cerrar sesión
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onNotificacionesClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Notificaciones",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "JP",
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                IconButton(
-                    onClick = {
-                        UsuarioRepository.cerrarSesion()
-                        onCerrarSesion()
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Cerrar sesión",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -311,49 +172,31 @@ private fun ResumenProveedorBlock(onNuevaOportunidadClick: () -> Unit) {
 
 @Composable
 private fun MetricasGrid() {
+    // Misma fuente que el perfil del proveedor: las métricas viven en metricasProveedor().
+    val metricas = metricasProveedor()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricaCard(
-                modifier = Modifier.weight(1f),
-                titulo = "Volumen total de ventas",
-                valor = "$142,500",
-                icon = Icons.Filled.AttachMoney,
-                iconBgColor = MaterialTheme.colorScheme.tertiary
-            )
-            MetricaCard(
-                modifier = Modifier.weight(1f),
-                titulo = "Grupos activos",
-                valor = "24",
-                icon = Icons.Filled.Group,
-                iconBgColor = MaterialTheme.colorScheme.primary
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricaCard(
-                modifier = Modifier.weight(1f),
-                titulo = "Ahorro promedio",
-                valor = "18%",
-                icon = Icons.AutoMirrored.Filled.TrendingUp,
-                iconBgColor = MaterialTheme.colorScheme.secondary
-            )
-            MetricaCard(
-                modifier = Modifier.weight(1f),
-                titulo = "Meta alcanzada",
-                valor = "85%",
-                icon = Icons.Filled.Flag,
-                iconBgColor = MiniMaxOrange
-            )
+        metricas.chunked(2).forEachIndexed { index, fila ->
+            if (index > 0) Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                fila.forEach { metrica ->
+                    MetricaCard(
+                        modifier = Modifier.weight(1f),
+                        titulo = metrica.titulo,
+                        valor = metrica.valor,
+                        icon = metrica.icon,
+                        iconBgColor = metrica.color
+                    )
+                }
+                // Completa la fila si quedó impar, para que la card no ocupe todo el ancho.
+                if (fila.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
         }
         Spacer(modifier = Modifier.height(20.dp))
     }
@@ -610,20 +453,30 @@ private fun ProductoCatalogoItem(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícono producto
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Inventory2,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+            // Imagen del producto (con fallback a ícono si no tiene)
+            val uri = producto.imagenUri
+            if (uri != null) {
+                UriImage(
+                    uri = uri,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Inventory2,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -676,43 +529,6 @@ private fun ProductoCatalogoItem(
                     modifier = Modifier.size(18.dp)
                 )
             }
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom Navigation Bar (proveedor)
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ProveedorBottomBar(
-    selectedTab: NavTabProveedor,
-    onTabSelected: (NavTabProveedor) -> Unit
-) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
-    ) {
-        NavTabProveedor.entries.forEach { tab ->
-            NavigationBarItem(
-                selected = selectedTab == tab,
-                onClick = { onTabSelected(tab) },
-                icon = {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.label,
-                        modifier = Modifier.size(22.dp)
-                    )
-                },
-                alwaysShowLabel = false,
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
         }
     }
 }

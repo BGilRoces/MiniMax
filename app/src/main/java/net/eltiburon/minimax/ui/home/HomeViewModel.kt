@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import net.eltiburon.minimax.data.EstadisticasRepository
 import net.eltiburon.minimax.data.OportunidadRepository
+import net.eltiburon.minimax.model.EstadisticasComprador
 import net.eltiburon.minimax.model.GrupoActivo
 import net.eltiburon.minimax.model.GrupoRecomendado
 import net.eltiburon.minimax.model.toGrupoActivo
@@ -20,6 +22,10 @@ private val ACTIVOS_IDS = setOf("1", "2", "3", "4")
 private val RECOMENDADOS_IDS = setOf("5", "6", "7", "8", "9")
 
 class HomeViewModel : ViewModel() {
+
+    // Números reales de "Mis Ahorros", derivados de las compras del usuario (se actualizan solos).
+    val estadisticas: StateFlow<EstadisticasComprador> = EstadisticasRepository.estadisticas()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), EstadisticasComprador())
 
     val gruposActivos: StateFlow<List<GrupoActivo>> = OportunidadRepository.obtenerTodas()
         .map { todas -> todas.filter { it.id in ACTIVOS_IDS }.map { it.toGrupoActivo() } }

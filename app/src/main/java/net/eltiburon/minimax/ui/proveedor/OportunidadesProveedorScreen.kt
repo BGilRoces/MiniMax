@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,27 +19,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import net.eltiburon.minimax.ui.common.MiniMaxTopBar
+import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
 import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun OportunidadesProveedorScreen(
-    onBack: () -> Unit = {},
     viewModel: OportunidadesProveedorViewModel = viewModel()
 ) {
     val oportunidades by viewModel.oportunidades.collectAsState()
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Mis Oportunidades", onBackClick = onBack) }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
             item {
                 Text(
                     text = "Grupos publicados (${oportunidades.size})",
@@ -52,7 +48,6 @@ fun OportunidadesProveedorScreen(
             items(oportunidades, key = { it.id }) { oportunidad ->
                 OportunidadCard(oportunidad)
             }
-        }
     }
 }
 
@@ -71,20 +66,12 @@ private fun OportunidadCard(oportunidad: Oportunidad) {
                 verticalAlignment = Alignment.Top
             ) {
                 Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Box(
+                    UriImage(
+                        uri = oportunidad.imagenUrl,
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MiniMaxPrimary.copy(alpha = 0.08f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Storefront,
-                            contentDescription = null,
-                            tint = MiniMaxPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    )
                     Spacer(Modifier.width(10.dp))
                     Text(
                         text = oportunidad.producto,

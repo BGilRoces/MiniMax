@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import net.eltiburon.minimax.data.UsuarioRepository
 import net.eltiburon.minimax.ui.theme.*
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,10 +94,7 @@ fun SeleccionRolScreen(
                 badge = "Personal",
                 badgeBg = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
                 badgeColor = MaterialTheme.colorScheme.tertiary,
-                onClick = {
-                    UsuarioRepository.setRol("comprador")
-                    onCompradorClick()
-                }
+                onClick = onCompradorClick
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -112,10 +108,7 @@ fun SeleccionRolScreen(
                 badge = "Negocio",
                 badgeBg = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                 badgeColor = MaterialTheme.colorScheme.secondary,
-                onClick = {
-                    UsuarioRepository.setRol("proveedor")
-                    onProveedorClick()
-                }
+                onClick = onProveedorClick
             )
 
             Spacer(modifier = Modifier.height(40.dp))

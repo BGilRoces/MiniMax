@@ -3,6 +3,7 @@ package net.eltiburon.minimax.data
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import net.eltiburon.minimax.R
+import net.eltiburon.minimax.data.local.MockImagenes
 import net.eltiburon.minimax.data.local.OportunidadDao
 import net.eltiburon.minimax.data.local.OportunidadEntity
 import net.eltiburon.minimax.model.EstadoGrupo
@@ -38,7 +39,9 @@ object OportunidadRepository {
     /** Primera instalación: si la tabla está vacía, la precarga con el catálogo demo. */
     suspend fun sembrarSiEstaVacia() {
         if (dao.contar() == 0) {
-            dao.insertarTodas(seed().map { it.toEntity() })
+            dao.insertarTodas(
+                seed().map { it.copy(imagenUri = MockImagenes.porId[it.id] ?: it.imagenUri).toEntity() }
+            )
         }
     }
 
@@ -77,7 +80,12 @@ object OportunidadRepository {
         categoria = categoria,
         descripcion = descripcion,
         imagenRes = imagenRes,
-        imagenUri = imagenUri,
+        // Si la fila no tiene imagen propia (p. ej. instalaciones cuya DB ya estaba en
+        // la versión actual antes de incorporar MockImagenes, donde ni el seed ni la
+        // migración llegaron a poblar la columna), resolvemos la URL mock por id. Así
+        // cada producto demo muestra siempre su imagen acorde, sin depender del estado
+        // de Room. Las oportunidades con foto real (content://) conservan su imagenUri.
+        imagenUri = imagenUri ?: MockImagenes.porId[id],
         precioUnitario = precioUnitario,
         precioMayorista = precioMayorista,
         descuentoPorcentaje = descuentoPorcentaje,

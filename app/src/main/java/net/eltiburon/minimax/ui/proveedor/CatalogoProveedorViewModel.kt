@@ -30,7 +30,8 @@ class CatalogoProveedorViewModel : ViewModel() {
                         id = oportunidad.id,
                         nombre = oportunidad.nombre,
                         unidades = oportunidad.stockDisponible,
-                        precio = formatearPrecio(oportunidad.precioMayorista)
+                        precio = formatearPrecio(oportunidad.precioMayorista),
+                        imagenUri = oportunidad.imagenUri
                     )
                 }
                 .filter { texto.isBlank() || it.nombre.contains(texto, ignoreCase = true) }

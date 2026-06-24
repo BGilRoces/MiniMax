@@ -29,21 +29,17 @@ import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun PedidosProveedorScreen(
-    onBack: () -> Unit = {},
     viewModel: PedidosProveedorViewModel = viewModel()
 ) {
     val pedidos by viewModel.pedidos.collectAsState()
     val filtro by viewModel.filtroEstado.collectAsState()
 
-    Scaffold(
-        containerColor = MiniMaxBackground,
-        topBar = { MiniMaxTopBar(subtitulo = "Pedidos recibidos", onBackClick = onBack) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+    // La top bar y la bottom bar las dibuja el Scaffold persistente del NavHost; acá solo el contenido.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MiniMaxBackground)
+    ) {
             Row(
                 modifier = Modifier
                     .background(Color.White)
@@ -71,7 +67,6 @@ fun PedidosProveedorScreen(
                     }
                 }
             }
-        }
     }
 }
 
