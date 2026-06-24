@@ -59,6 +59,14 @@ class DashboardProveedorViewModel : ViewModel() {
         viewModelScope.launch { OportunidadRepository.eliminar(id) }
     }
 
+    /**
+     * Valida un lote: lo saca de la lista de pendientes. Por ahora es solo en memoria (mock);
+     * al integrar backend, acá iría la llamada que confirma el lote contra el servidor.
+     */
+    fun validarPedido(id: Int) {
+        _pedidosPendientes.value = _pedidosPendientes.value.filterNot { it.id == id }
+    }
+
     private fun mockPedidos() = listOf(
         PedidoPendiente(1, "Componentes Electrónicos X-200", 12, "$4,200", "4h"),
         PedidoPendiente(2, "Sillas Ergonómicas Serie-A", 45, "$12,850", "4h")

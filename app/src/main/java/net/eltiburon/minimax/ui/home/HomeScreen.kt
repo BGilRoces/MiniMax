@@ -65,6 +65,9 @@ fun HomeScreen(
     onGruposClick: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
     onMisComprasClick: () -> Unit = {},
+    onInventarioClick: () -> Unit = {},
+    onAnaliticaClick: () -> Unit = {},
+    onNotificacionesClick: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -90,8 +93,11 @@ fun HomeScreen(
                     when (item) {
                         DrawerNavItem.MI_PERFIL -> onPerfilClick()
                         DrawerNavItem.MIS_PEDIDOS -> onMisComprasClick()
+                        DrawerNavItem.GRUPOS_ACTIVOS -> onGruposClick()
+                        DrawerNavItem.INVENTARIO -> onInventarioClick()
+                        DrawerNavItem.ANALITICA -> onAnaliticaClick()
                         DrawerNavItem.DASHBOARD -> { /* ya estamos aquí */ }
-                        else -> { /* pantallas no implementadas aún */ }
+                        DrawerNavItem.CONFIGURACION -> { /* requiere persistencia: pendiente de backend */ }
                     }
                 },
                 onCerrarSesion = {
@@ -111,6 +117,7 @@ fun HomeScreen(
                             NavTab.PERFIL -> onPerfilClick()
                             NavTab.GRUPOS -> onGruposClick()
                             NavTab.PEDIDOS -> onMisComprasClick()
+                            NavTab.INVENTARIO -> onInventarioClick()
                             else -> selectedTab = tab
                         }
                     }
@@ -121,9 +128,14 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
             ) {
-                item { HomeHeader(onMenuClick = { scope.launch { drawerState.open() } }) }
+                item {
+                    HomeHeader(
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        onNotificacionesClick = onNotificacionesClick
+                    )
+                }
                 item { SavingsBanner() }
-                item { GruposActivosSection(gruposActivos, onGrupoClick) }
+                item { GruposActivosSection(gruposActivos, onGrupoClick, onGruposClick) }
                 item {
                     GruposRecomendadosSection(
                         grupos = gruposFiltrados,
@@ -314,7 +326,7 @@ private fun DrawerItemRow(
 // ── Header ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun HomeHeader(onMenuClick: () -> Unit = {}) {
+private fun HomeHeader(onMenuClick: () -> Unit = {}, onNotificacionesClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -357,7 +369,7 @@ private fun HomeHeader(onMenuClick: () -> Unit = {}) {
 
             // Acciones
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = {}) {
+                IconButton(onClick = onNotificacionesClick) {
                     Icon(
                         imageVector = Icons.Filled.Notifications,
                         contentDescription = "Notificaciones",
@@ -430,7 +442,11 @@ private fun SavingsBanner() {
 // ── Sección Grupos Activos ───────────────────────────────────────────────────
 
 @Composable
-private fun GruposActivosSection(grupos: List<GrupoActivo>, onGrupoClick: (String) -> Unit) {
+private fun GruposActivosSection(
+    grupos: List<GrupoActivo>,
+    onGrupoClick: (String) -> Unit,
+    onVerTodos: () -> Unit = {}
+) {
     Column {
         Row(
             modifier = Modifier
@@ -445,7 +461,7 @@ private fun GruposActivosSection(grupos: List<GrupoActivo>, onGrupoClick: (Strin
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            TextButton(onClick = {}) {
+            TextButton(onClick = onVerTodos) {
                 Text("Ver todos", color = MaterialTheme.colorScheme.secondary, fontSize = 14.sp)
             }
         }

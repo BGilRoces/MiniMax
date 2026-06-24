@@ -21,8 +21,15 @@ import net.eltiburon.minimax.ui.grupodetalle.GrupoDetalleScreen
 import net.eltiburon.minimax.ui.home.HomeScreen
 import net.eltiburon.minimax.ui.miscompras.MisComprasScreen
 import net.eltiburon.minimax.ui.perfil.MiPerfilScreen
+import net.eltiburon.minimax.ui.analitica.AnaliticaScreen
+import net.eltiburon.minimax.ui.inventario.InventarioScreen
+import net.eltiburon.minimax.ui.notificaciones.NotificacionesScreen
+import net.eltiburon.minimax.ui.pedidos.MisPedidosScreen
+import net.eltiburon.minimax.ui.proveedor.CatalogoProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.DashboardProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.NuevaOportunidadScreen
+import net.eltiburon.minimax.ui.proveedor.OportunidadesProveedorScreen
+import net.eltiburon.minimax.ui.proveedor.PedidosProveedorScreen
 import net.eltiburon.minimax.ui.seleccionrol.SeleccionRolScreen
 import net.eltiburon.minimax.ui.theme.MiniMaxTheme
 
@@ -40,6 +47,13 @@ object Rutas {
     const val EXPLORAR_GRUPOS = "explorar_grupos"
     const val MI_PERFIL = "mi_perfil"
     const val MIS_COMPRAS = "mis_compras"
+    const val NOTIFICACIONES = "notificaciones"
+    const val MIS_PEDIDOS = "mis_pedidos"
+    const val INVENTARIO = "inventario"
+    const val ANALITICA = "analitica"
+    const val PEDIDOS_PROVEEDOR = "pedidos_proveedor"
+    const val OPORTUNIDADES_PROVEEDOR = "oportunidades_proveedor"
+    const val CATALOGO_PROVEEDOR = "catalogo_proveedor"
 
     // Rutas con argumentos.
     const val NUEVA_OPORTUNIDAD = "nueva_oportunidad?oportunidadId={oportunidadId}"
@@ -127,6 +141,9 @@ private fun MiniMaxNavHost() {
                 onGruposClick = { navController.navigate(Rutas.EXPLORAR_GRUPOS) },
                 onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
                 onMisComprasClick = { navController.navigate(Rutas.MIS_COMPRAS) },
+                onInventarioClick = { navController.navigate(Rutas.INVENTARIO) },
+                onAnaliticaClick = { navController.navigate(Rutas.ANALITICA) },
+                onNotificacionesClick = { navController.navigate(Rutas.NOTIFICACIONES) },
                 onCerrarSesion = {
                     // Cerrar sesión vuelve a Login y limpia todo el back stack.
                     navController.navigate(Rutas.LOGIN) {
@@ -141,6 +158,11 @@ private fun MiniMaxNavHost() {
                 onNuevaOportunidadClick = { navController.navigate(Rutas.nuevaOportunidad()) },
                 onOportunidadClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
                 onOportunidadEditClick = { id -> navController.navigate(Rutas.nuevaOportunidad(id)) },
+                onPedidosClick = { navController.navigate(Rutas.PEDIDOS_PROVEEDOR) },
+                onOportunidadesClick = { navController.navigate(Rutas.OPORTUNIDADES_PROVEEDOR) },
+                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
+                onNotificacionesClick = { navController.navigate(Rutas.NOTIFICACIONES) },
+                onCatalogoClick = { navController.navigate(Rutas.CATALOGO_PROVEEDOR) },
                 onCerrarSesion = {
                     // Mismo comportamiento que el comprador: vuelve a Login limpiando el back stack.
                     navController.navigate(Rutas.LOGIN) {
@@ -172,7 +194,9 @@ private fun MiniMaxNavHost() {
             ExplorarGruposScreen(
                 onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) },
                 onHomeClick = { navController.popBackStack() },
-                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) }
+                onPerfilClick = { navController.navigate(Rutas.MI_PERFIL) },
+                onPedidosClick = { navController.navigate(Rutas.MIS_PEDIDOS) },
+                onInventarioClick = { navController.navigate(Rutas.INVENTARIO) }
             )
         }
 
@@ -260,6 +284,34 @@ private fun MiniMaxNavHost() {
             MisComprasScreen(
                 onBackClick = { navController.popBackStack() }
             )
+        }
+
+        composable(Rutas.NOTIFICACIONES) {
+            NotificacionesScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.MIS_PEDIDOS) {
+            MisPedidosScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.INVENTARIO) {
+            InventarioScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.ANALITICA) {
+            AnaliticaScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.PEDIDOS_PROVEEDOR) {
+            PedidosProveedorScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.OPORTUNIDADES_PROVEEDOR) {
+            OportunidadesProveedorScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Rutas.CATALOGO_PROVEEDOR) {
+            CatalogoProveedorScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.UsuarioRepository
 import net.eltiburon.minimax.ui.theme.*
 
@@ -46,6 +47,11 @@ fun DashboardProveedorScreen(
     onNuevaOportunidadClick: () -> Unit = {},
     onOportunidadClick: (String) -> Unit = {},
     onOportunidadEditClick: (String) -> Unit = {},
+    onPedidosClick: () -> Unit = {},
+    onOportunidadesClick: () -> Unit = {},
+    onPerfilClick: () -> Unit = {},
+    onNotificacionesClick: () -> Unit = {},
+    onCatalogoClick: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
     viewModel: DashboardProveedorViewModel = viewModel()
 ) {
@@ -58,6 +64,11 @@ fun DashboardProveedorScreen(
 
     // Id pendiente de confirmación de borrado (null = no se está mostrando el diálogo).
     var idAEliminar by remember { mutableStateOf<String?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    // Pedido en proceso de validación: si no es null, se muestra el diálogo de confirmación.
+    var pedidoAValidar by remember { mutableStateOf<PedidoPendiente?>(null) }
 
     idAEliminar?.let { id ->
         AlertDialog(
@@ -81,12 +92,16 @@ fun DashboardProveedorScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             ProveedorBottomBar(
                 selectedTab = selectedTab,
                 onTabSelected = { tab ->
                     when (tab) {
                         NavTabProveedor.NUEVA_ORDEN -> onNuevaOportunidadClick()
+                        NavTabProveedor.PEDIDOS -> onPedidosClick()
+                        NavTabProveedor.OPORTUNIDADES -> onOportunidadesClick()
+                        NavTabProveedor.PERFIL -> onPerfilClick()
                         else -> selectedTab = tab
                     }
                 }
@@ -97,19 +112,52 @@ fun DashboardProveedorScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
         ) {
-            item { ProveedorHeader(onCerrarSesion = onCerrarSesion) }
+            item {
+                ProveedorHeader(
+                    onNotificacionesClick = onNotificacionesClick,
+                    onCerrarSesion = onCerrarSesion
+                )
+            }
             item { ResumenProveedorBlock(onNuevaOportunidadClick) }
             item { MetricasGrid() }
-            item { PedidosPendientesSection(pedidosPendientes) }
+            item {
+                PedidosPendientesSection(
+                    pedidos = pedidosPendientes,
+                    onValidar = { pedidoAValidar = it }
+                )
+            }
             item {
                 CatalogoSection(
                     catalogo = catalogo,
                     onProductoClick = onOportunidadClick,
                     onEditarClick = onOportunidadEditClick,
-                    onEliminarClick = { id -> idAEliminar = id }
+                    onEliminarClick = { id -> idAEliminar = id },
+                    onVerTodo = onCatalogoClick
                 )
             }
         }
+    }
+
+    pedidoAValidar?.let { pedido ->
+        AlertDialog(
+            onDismissRequest = { pedidoAValidar = null },
+            title = { Text("Validar lote") },
+            text = { Text("¿Confirmás la validación del lote \"${pedido.nombre}\"? Los compradores serán notificados.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.validarPedido(pedido.id)
+                    pedidoAValidar = null
+                    scope.launch { snackbarHostState.showSnackbar("Lote validado correctamente") }
+                }) {
+                    Text("Validar", color = MiniMaxPrimary, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pedidoAValidar = null }) {
+                    Text("Cancelar", color = Color.Gray)
+                }
+            }
+        )
     }
 }
 
@@ -118,7 +166,10 @@ fun DashboardProveedorScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
+private fun ProveedorHeader(
+    onNotificacionesClick: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -166,7 +217,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
 
             // Notificaciones + Avatar + Cerrar sesión
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { /* notificaciones futuro */ }) {
+                IconButton(onClick = onNotificacionesClick) {
                     Icon(
                         imageVector = Icons.Filled.Notifications,
                         contentDescription = "Notificaciones",
@@ -360,7 +411,10 @@ private fun MetricaCard(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PedidosPendientesSection(pedidos: List<PedidoPendiente>) {
+private fun PedidosPendientesSection(
+    pedidos: List<PedidoPendiente>,
+    onValidar: (PedidoPendiente) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -373,15 +427,23 @@ private fun PedidosPendientesSection(pedidos: List<PedidoPendiente>) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(12.dp))
+        if (pedidos.isEmpty()) {
+            Text(
+                text = "No hay lotes pendientes de validación.",
+                fontSize = 13.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
         pedidos.forEach { pedido ->
-            PedidoPendienteCard(pedido)
+            PedidoPendienteCard(pedido, onValidar = { onValidar(pedido) })
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
 @Composable
-private fun PedidoPendienteCard(pedido: PedidoPendiente) {
+private fun PedidoPendienteCard(pedido: PedidoPendiente, onValidar: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -438,7 +500,7 @@ private fun PedidoPendienteCard(pedido: PedidoPendiente) {
 
             // Botón acción
             Button(
-                onClick = { /* validar lote futuro */ },
+                onClick = onValidar,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -486,7 +548,8 @@ private fun CatalogoSection(
     catalogo: List<ProductoCatalogo>,
     onProductoClick: (String) -> Unit,
     onEditarClick: (String) -> Unit,
-    onEliminarClick: (String) -> Unit
+    onEliminarClick: (String) -> Unit,
+    onVerTodo: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -505,7 +568,7 @@ private fun CatalogoSection(
                 fontSize = 17.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            TextButton(onClick = { /* ver catálogo completo futuro */ }) {
+            TextButton(onClick = onVerTodo) {
                 Text(
                     text = "Ver todo",
                     color = MaterialTheme.colorScheme.secondary,

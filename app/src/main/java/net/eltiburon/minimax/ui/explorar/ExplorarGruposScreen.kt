@@ -1,6 +1,7 @@
 package net.eltiburon.minimax.ui.explorar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,8 @@ fun ExplorarGruposScreen(
     onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
+    onPedidosClick: () -> Unit = {},
+    onInventarioClick: () -> Unit = {},
     onGrupoClick: (String) -> Unit = {},
     viewModel: ExplorarGruposViewModel = viewModel()
 ) {
@@ -39,6 +42,10 @@ fun ExplorarGruposScreen(
     val grupos by viewModel.gruposFiltrados.collectAsState()
     val searchQuery by viewModel.textoBusqueda.collectAsState()
     val selectedCategoria by viewModel.filtroCategoria.collectAsState()
+    val filtroEstado by viewModel.filtroEstado.collectAsState()
+    val orden by viewModel.orden.collectAsState()
+
+    var mostrarFiltros by remember { mutableStateOf(false) }
 
     // Las categorías son una decisión de presentación (etiquetas de los chips).
     val categorias = listOf(
@@ -49,10 +56,15 @@ fun ExplorarGruposScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            ExplorarTopBar(onBackClick)
+            ExplorarTopBar(onBackClick = onBackClick, onFiltrosClick = { mostrarFiltros = true })
         },
         bottomBar = {
-            ExplorarBottomBar(onHomeClick = onHomeClick, onPerfilClick = onPerfilClick)
+            ExplorarBottomBar(
+                onHomeClick = onHomeClick,
+                onPerfilClick = onPerfilClick,
+                onPedidosClick = onPedidosClick,
+                onInventarioClick = onInventarioClick
+            )
         }
     ) { innerPadding ->
         Column(
@@ -140,11 +152,119 @@ fun ExplorarGruposScreen(
             }
         }
     }
+
+    if (mostrarFiltros) {
+        FiltrosBottomSheet(
+            estadoSeleccionado = filtroEstado,
+            ordenSeleccionado = orden,
+            onEstadoChange = viewModel::onEstadoChange,
+            onOrdenChange = viewModel::onOrdenChange,
+            onLimpiar = viewModel::limpiarFiltrosAvanzados,
+            onDismiss = { mostrarFiltros = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExplorarTopBar(onBackClick: () -> Unit) {
+private fun FiltrosBottomSheet(
+    estadoSeleccionado: EstadoGrupo?,
+    ordenSeleccionado: OrdenGrupos,
+    onEstadoChange: (EstadoGrupo?) -> Unit,
+    onOrdenChange: (OrdenGrupos) -> Unit,
+    onLimpiar: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color.White) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Filtros",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MiniMaxTextPrimary
+                )
+                TextButton(onClick = onLimpiar) {
+                    Text("Limpiar", color = MiniMaxAccent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Text("Estado", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MiniMaxTextPrimary)
+            Spacer(Modifier.height(8.dp))
+            FlowChips {
+                FiltroPill("Todos", estadoSeleccionado == null) { onEstadoChange(null) }
+                EstadoGrupo.entries.forEach { estado ->
+                    FiltroPill(estadoLabel(estado), estadoSeleccionado == estado) { onEstadoChange(estado) }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Text("Ordenar por", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MiniMaxTextPrimary)
+            Spacer(Modifier.height(8.dp))
+            FlowChips {
+                OrdenGrupos.entries.forEach { o ->
+                    FiltroPill(o.label, ordenSeleccionado == o) { onOrdenChange(o) }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+            ) {
+                Text("Ver resultados", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FlowChips(content: @Composable () -> Unit) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { content() }
+}
+
+@Composable
+private fun FiltroPill(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (seleccionado) MiniMaxPrimary else Color(0xFFF3F4F6))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = texto,
+            color = if (seleccionado) Color.White else Color.Gray,
+            fontSize = 13.sp,
+            fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium
+        )
+    }
+}
+
+private fun estadoLabel(estado: EstadoGrupo): String = when (estado) {
+    EstadoGrupo.FORMANDOSE -> "Formándose"
+    EstadoGrupo.CASI_LLENO -> "Casi lleno"
+    EstadoGrupo.URGENTE -> "Urgente"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExplorarTopBar(onBackClick: () -> Unit, onFiltrosClick: () -> Unit) {
     TopAppBar(
         title = { Text("Explorar Grupos", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
         navigationIcon = {
@@ -153,7 +273,7 @@ private fun ExplorarTopBar(onBackClick: () -> Unit) {
             }
         },
         actions = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onFiltrosClick) {
                 Icon(Icons.Filled.FilterList, contentDescription = "Filtros")
             }
         },
@@ -279,7 +399,12 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
 // ── Bottom Navigation ─────────────────────────────────────────────────────────
 
 @Composable
-private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit) {
+private fun ExplorarBottomBar(
+    onHomeClick: () -> Unit,
+    onPerfilClick: () -> Unit,
+    onPedidosClick: () -> Unit,
+    onInventarioClick: () -> Unit
+) {
     val items = listOf(
         Triple(Icons.Filled.Home, "Dashboard", false),
         Triple(Icons.Filled.ShoppingBag, "Pedidos", false),
@@ -294,6 +419,8 @@ private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit
                 onClick = {
                     when (index) {
                         0 -> onHomeClick()
+                        1 -> onPedidosClick()
+                        3 -> onInventarioClick()
                         4 -> onPerfilClick()
                         else -> {}
                     }
