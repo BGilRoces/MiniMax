@@ -23,11 +23,11 @@ class HomeViewModel : ViewModel() {
 
     val gruposActivos: StateFlow<List<GrupoActivo>> = OportunidadRepository.obtenerTodas()
         .map { todas -> todas.filter { it.id in ACTIVOS_IDS }.map { it.toGrupoActivo() } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _todosRecomendados: StateFlow<List<GrupoRecomendado>> = OportunidadRepository.obtenerTodas()
         .map { todas -> todas.filter { it.id in RECOMENDADOS_IDS }.map { it.toGrupoRecomendado() } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -43,7 +43,7 @@ class HomeViewModel : ViewModel() {
             it.nombre.contains(query, ignoreCase = true) ||
                 it.proveedor.contains(query, ignoreCase = true)
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query

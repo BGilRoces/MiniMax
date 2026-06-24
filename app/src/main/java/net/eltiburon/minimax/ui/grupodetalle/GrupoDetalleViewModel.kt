@@ -1,9 +1,11 @@
 package net.eltiburon.minimax.ui.grupodetalle
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.model.GrupoDetalle
 import net.eltiburon.minimax.model.toGrupoDetalle
@@ -18,7 +20,9 @@ class GrupoDetalleViewModel : ViewModel() {
     val estaUnido: StateFlow<Boolean> = _estaUnido.asStateFlow()
 
     fun cargarGrupo(grupoId: String) {
-        _grupo.value = OportunidadRepository.obtenerPorId(grupoId)?.toGrupoDetalle()
+        viewModelScope.launch {
+            _grupo.value = OportunidadRepository.obtenerPorId(grupoId)?.toGrupoDetalle()
+        }
     }
 
     fun alternarMembresia() {

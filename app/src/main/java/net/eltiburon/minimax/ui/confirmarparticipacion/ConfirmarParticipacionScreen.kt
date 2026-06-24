@@ -101,7 +101,9 @@ fun ConfirmarParticipacionScreen(
             item {
                 BotonesConfirmacion(
                     onVolver = onBackClick,
-                    onConfirmar = onConfirmarClick,
+                    onConfirmar = {
+                        viewModel.confirmar(grupoId, cantidadSeleccionada, onConfirmarClick)
+                    },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }

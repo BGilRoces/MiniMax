@@ -8,7 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
+import net.eltiburon.minimax.data.ParticipacionRepository
+import net.eltiburon.minimax.data.UsuarioRepository
 import net.eltiburon.minimax.model.ProductoParticipacion
 import net.eltiburon.minimax.model.toProductoParticipacion
 
@@ -37,11 +40,32 @@ class ResumenParticipacionViewModel : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     fun cargarGrupo(grupoId: String) {
-        _producto.value = OportunidadRepository.obtenerPorId(grupoId)?.toProductoParticipacion()
-            ?: ProductoParticipacion.demo()
+        viewModelScope.launch {
+            _producto.value = OportunidadRepository.obtenerPorId(grupoId)?.toProductoParticipacion()
+                ?: ProductoParticipacion.demo()
+        }
     }
 
     fun setCantidad(cantidad: Int) {
         _cantidad.value = cantidad
+    }
+
+    /**
+     * Registra la participación del usuario logueado e inserta + descuenta stock de la
+     * oportunidad en una sola transacción (ParticipacionRepository.confirmarParticipacion).
+     * [onListo] se invoca al terminar para que la pantalla navegue a la confirmación.
+     */
+    fun confirmar(grupoId: String, cantidad: Int, onListo: () -> Unit) {
+        viewModelScope.launch {
+            val email = UsuarioRepository.usuarioActual.value?.email
+            if (email != null) {
+                ParticipacionRepository.confirmarParticipacion(
+                    oportunidadId = grupoId,
+                    usuarioEmail = email,
+                    cantidad = cantidad
+                )
+            }
+            onListo()
+        }
     }
 }

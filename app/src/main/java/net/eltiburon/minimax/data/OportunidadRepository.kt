@@ -1,43 +1,100 @@
 package net.eltiburon.minimax.data
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import net.eltiburon.minimax.R
+import net.eltiburon.minimax.data.local.OportunidadDao
+import net.eltiburon.minimax.data.local.OportunidadEntity
 import net.eltiburon.minimax.model.EstadoGrupo
 import net.eltiburon.minimax.model.Oportunidad
 import java.util.UUID
 
 /**
- * Fuente única de datos en memoria para las oportunidades de compra grupal.
- * Sin Room/Retrofit todavía: solo un MutableStateFlow sembrado con los mocks
- * que antes estaban repartidos en HomeViewModel, ExplorarGruposViewModel,
- * GrupoDetalleViewModel y ProductoParticipacion.demo().
+ * Fuente única de datos para las oportunidades de compra grupal, ahora persistida con Room
+ * (antes era un MutableStateFlow en memoria). El object sigue siendo el singleton que
+ * consumen las pantallas; [init] lo conecta con el DAO real desde MiniMaxApp.onCreate().
  */
 object OportunidadRepository {
 
-    private val _oportunidades = MutableStateFlow(seed())
+    private lateinit var dao: OportunidadDao
 
-    fun obtenerTodas(): StateFlow<List<Oportunidad>> = _oportunidades.asStateFlow()
-
-    fun obtenerPorId(id: String): Oportunidad? =
-        _oportunidades.value.find { it.id == id }
-
-    fun agregar(oportunidad: Oportunidad) {
-        _oportunidades.value = _oportunidades.value + oportunidad
+    fun init(dao: OportunidadDao) {
+        this.dao = dao
     }
 
-    fun editar(oportunidad: Oportunidad) {
-        _oportunidades.value = _oportunidades.value.map {
-            if (it.id == oportunidad.id) oportunidad else it
+    fun obtenerTodas(): Flow<List<Oportunidad>> =
+        dao.obtenerTodas().map { entidades -> entidades.map { it.toDomain() } }
+
+    suspend fun obtenerPorId(id: String): Oportunidad? = dao.obtenerPorId(id)?.toDomain()
+
+    suspend fun agregar(oportunidad: Oportunidad) = dao.insertar(oportunidad.toEntity())
+
+    suspend fun editar(oportunidad: Oportunidad) = dao.actualizar(oportunidad.toEntity())
+
+    suspend fun eliminar(id: String) = dao.eliminar(id)
+
+    fun nuevoId(): String = UUID.randomUUID().toString()
+
+    /** Primera instalación: si la tabla está vacía, la precarga con el catálogo demo. */
+    suspend fun sembrarSiEstaVacia() {
+        if (dao.contar() == 0) {
+            dao.insertarTodas(seed().map { it.toEntity() })
         }
     }
 
-    fun eliminar(id: String) {
-        _oportunidades.value = _oportunidades.value.filterNot { it.id == id }
-    }
+    private fun Oportunidad.toEntity() = OportunidadEntity(
+        id = id,
+        nombre = nombre,
+        proveedor = proveedor,
+        proveedorDescripcion = proveedorDescripcion,
+        categoria = categoria,
+        descripcion = descripcion,
+        imagenRes = imagenRes,
+        imagenUri = imagenUri,
+        precioUnitario = precioUnitario,
+        precioMayorista = precioMayorista,
+        descuentoPorcentaje = descuentoPorcentaje,
+        progresoActual = progresoActual,
+        unidadesFaltantes = unidadesFaltantes,
+        cantidadMaxima = cantidadMaxima,
+        minutosRestantes = minutosRestantes,
+        tiempoRestanteTexto = tiempoRestanteTexto,
+        miembrosActivos = miembrosActivos,
+        stockDisponible = stockDisponible,
+        lote = lote,
+        prioridad = prioridad,
+        origen = origen,
+        acidez = acidez,
+        crecimientoPorcentaje = crecimientoPorcentaje,
+        estado = estado
+    )
 
-    fun nuevoId(): String = UUID.randomUUID().toString()
+    private fun OportunidadEntity.toDomain() = Oportunidad(
+        id = id,
+        nombre = nombre,
+        proveedor = proveedor,
+        proveedorDescripcion = proveedorDescripcion,
+        categoria = categoria,
+        descripcion = descripcion,
+        imagenRes = imagenRes,
+        imagenUri = imagenUri,
+        precioUnitario = precioUnitario,
+        precioMayorista = precioMayorista,
+        descuentoPorcentaje = descuentoPorcentaje,
+        progresoActual = progresoActual,
+        unidadesFaltantes = unidadesFaltantes,
+        cantidadMaxima = cantidadMaxima,
+        minutosRestantes = minutosRestantes,
+        tiempoRestanteTexto = tiempoRestanteTexto,
+        miembrosActivos = miembrosActivos,
+        stockDisponible = stockDisponible,
+        lote = lote,
+        prioridad = prioridad,
+        origen = origen,
+        acidez = acidez,
+        crecimientoPorcentaje = crecimientoPorcentaje,
+        estado = estado
+    )
 
     private fun seed(): List<Oportunidad> = listOf(
         // ── Antes: HomeViewModel.gruposActivosMock(), fusionado con el detalle de

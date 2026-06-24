@@ -17,10 +17,6 @@ import net.eltiburon.minimax.ui.confirmacionparticipacion.ConfirmacionParticipac
 import net.eltiburon.minimax.ui.confirmarparticipacion.ConfirmarParticipacionScreen
 import net.eltiburon.minimax.ui.elegircantidad.ElegirCantidadScreen
 import net.eltiburon.minimax.ui.explorar.ExplorarGruposScreen
-import net.eltiburon.minimax.data.ParticipacionRepository
-import net.eltiburon.minimax.data.UsuarioRepository
-import net.eltiburon.minimax.model.EstadoCompra
-import net.eltiburon.minimax.model.Participacion
 import net.eltiburon.minimax.ui.grupodetalle.GrupoDetalleScreen
 import net.eltiburon.minimax.ui.home.HomeScreen
 import net.eltiburon.minimax.ui.miscompras.MisComprasScreen
@@ -220,19 +216,8 @@ private fun MiniMaxNavHost() {
                 cantidadSeleccionada = cantidad,
                 onBackClick = { navController.popBackStack() },
                 onConfirmarClick = {
-                    // Registra la participación con el usuario logueado antes de navegar.
-                    UsuarioRepository.usuarioActual.value?.let { usuario ->
-                        ParticipacionRepository.agregar(
-                            Participacion(
-                                id = ParticipacionRepository.nuevoId(),
-                                oportunidadId = grupoId,
-                                usuarioEmail = usuario.email,
-                                cantidad = cantidad,
-                                fechaMillis = System.currentTimeMillis(),
-                                estado = EstadoCompra.ACTIVA
-                            )
-                        )
-                    }
+                    // El registro de la participación ya lo hace ConfirmarParticipacionScreen
+                    // (vía ResumenParticipacionViewModel.confirmar) antes de invocar este callback.
                     navController.navigate(Rutas.confirmacionParticipacion(grupoId, cantidad))
                 }
             )

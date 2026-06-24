@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.util.formatearPrecio
 
@@ -51,11 +52,11 @@ class DashboardProveedorViewModel : ViewModel() {
                 )
             }
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Borra la oportunidad del repo; el catálogo se actualiza solo porque viene del StateFlow. */
+    /** Borra la oportunidad del repo; el catálogo se actualiza solo porque viene del Flow. */
     fun eliminarOportunidad(id: String) {
-        OportunidadRepository.eliminar(id)
+        viewModelScope.launch { OportunidadRepository.eliminar(id) }
     }
 
     private fun mockPedidos() = listOf(

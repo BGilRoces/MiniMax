@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.model.ProductoParticipacion
 import net.eltiburon.minimax.model.toProductoParticipacion
@@ -38,8 +39,10 @@ class ElegirCantidadViewModel : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     fun cargarGrupo(grupoId: String) {
-        _producto.value = OportunidadRepository.obtenerPorId(grupoId)?.toProductoParticipacion()
-            ?: ProductoParticipacion.demo()
+        viewModelScope.launch {
+            _producto.value = OportunidadRepository.obtenerPorId(grupoId)?.toProductoParticipacion()
+                ?: ProductoParticipacion.demo()
+        }
     }
 
     fun incrementar() {

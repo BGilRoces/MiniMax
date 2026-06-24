@@ -30,10 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import net.eltiburon.minimax.R
-import net.eltiburon.minimax.data.OportunidadRepository
-import net.eltiburon.minimax.model.EstadoGrupo
-import net.eltiburon.minimax.model.Oportunidad
 import net.eltiburon.minimax.ui.camera.CameraCaptureScreen
 import net.eltiburon.minimax.ui.common.UriImage
 import net.eltiburon.minimax.ui.theme.*
@@ -41,20 +37,6 @@ import net.eltiburon.minimax.ui.theme.*
 private val categorias = listOf(
     "Alimentos", "Electrónica", "Decoración", "Cafetería", "Textil", "Gadgets", "Otros"
 )
-
-private fun minutosHasta(fechaLimite: String): Int = try {
-    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    val fecha = java.time.LocalDate.parse(fechaLimite, formatter)
-    val dias = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), fecha).toInt()
-    (dias * 1440).coerceAtLeast(60)
-} catch (e: Exception) {
-    1440
-}
-
-private fun formatearTiempoRestante(minutos: Int): String {
-    val dias = minutos / 1440
-    return if (dias >= 1) "$dias ${if (dias == 1) "día" else "días"}" else "${minutos / 60} hs"
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,9 +51,7 @@ fun NuevaOportunidadScreen(
     // Si llega un id existente, precargamos el formulario con sus datos (editar);
     // si no, el formulario queda vacío (crear), tal como antes.
     LaunchedEffect(oportunidadId) {
-        oportunidadId?.let { id ->
-            OportunidadRepository.obtenerPorId(id)?.let { viewModel.cargarDesde(it) }
-        }
+        viewModel.cargarSiExiste(oportunidadId)
     }
 
     val nombre          by viewModel.nombre.collectAsState()
@@ -249,65 +229,9 @@ fun NuevaOportunidadScreen(
                     },
                     esEdicion = esEdicion,
                     onPublicar = {
-                        scope.launch {
-                            if (viewModel.camposObligatoriosCompletos()) {
-                                // Al editar, conservamos los campos que el formulario no captura
-                                // (proveedor, lote, progreso, etc.) tal como estaban.
-                                val existente = oportunidadId?.let { OportunidadRepository.obtenerPorId(it) }
-
-                                val precioMayoristaValor = precioMayorista.toDoubleOrNull() ?: 0.0
-                                val precioUnitarioValor = precioReferencia.toDoubleOrNull()
-                                    ?.takeIf { it > 0 } ?: precioMayoristaValor
-                                val descuentoValor = if (precioUnitarioValor > 0) {
-                                    (((precioUnitarioValor - precioMayoristaValor) / precioUnitarioValor) * 100)
-                                        .toInt()
-                                        .coerceAtLeast(0)
-                                } else 0
-                                val cantidadMinimaValor = cantidadMinima.toIntOrNull() ?: 0
-                                val stockValor = stockDisponible.toIntOrNull() ?: cantidadMinimaValor
-                                val minutosRestantesValor = minutosHasta(fechaLimite)
-
-                                val oportunidad = Oportunidad(
-                                    id = existente?.id ?: OportunidadRepository.nuevoId(),
-                                    nombre = nombre,
-                                    proveedor = existente?.proveedor ?: "Mi Negocio",
-                                    proveedorDescripcion = existente?.proveedorDescripcion ?: "",
-                                    categoria = categoria,
-                                    descripcion = descripcion,
-                                    imagenRes = existente?.imagenRes ?: R.drawable.aceite,
-                                    imagenUri = imagenUri,
-                                    precioUnitario = precioUnitarioValor,
-                                    precioMayorista = precioMayoristaValor,
-                                    descuentoPorcentaje = descuentoValor,
-                                    progresoActual = existente?.progresoActual ?: 0,
-                                    unidadesFaltantes = cantidadMinimaValor,
-                                    cantidadMaxima = cantidadMinimaValor.takeIf { it > 0 } ?: 20,
-                                    minutosRestantes = minutosRestantesValor,
-                                    tiempoRestanteTexto = formatearTiempoRestante(minutosRestantesValor),
-                                    miembrosActivos = existente?.miembrosActivos ?: 0,
-                                    stockDisponible = stockValor,
-                                    lote = existente?.lote ?: "",
-                                    prioridad = existente?.prioridad ?: "PRIORIDAD ALTA",
-                                    origen = existente?.origen ?: "",
-                                    acidez = existente?.acidez ?: "",
-                                    crecimientoPorcentaje = existente?.crecimientoPorcentaje ?: 0,
-                                    estado = existente?.estado ?: EstadoGrupo.FORMANDOSE
-                                )
-
-                                if (existente != null) {
-                                    OportunidadRepository.editar(oportunidad)
-                                } else {
-                                    OportunidadRepository.agregar(oportunidad)
-                                }
-
-                                viewModel.limpiar()
-                                snackbarHostState.showSnackbar(
-                                    if (existente != null) "Cambios guardados" else "Oportunidad publicada correctamente"
-                                )
-                                onPublicadoOk()
-                            } else {
-                                snackbarHostState.showSnackbar("Completá los campos obligatorios")
-                            }
+                        viewModel.publicar(oportunidadId) { exito, mensaje ->
+                            scope.launch { snackbarHostState.showSnackbar(mensaje) }
+                            if (exito) onPublicadoOk()
                         }
                     }
                 )

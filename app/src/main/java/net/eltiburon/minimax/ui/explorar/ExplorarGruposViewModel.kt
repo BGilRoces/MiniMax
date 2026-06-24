@@ -12,7 +12,7 @@ class ExplorarGruposViewModel : ViewModel() {
     // Lista completa, derivada de la fuente de datos única. Privada: la UI nunca la toca directamente.
     private val _todos: StateFlow<List<GrupoResumen>> = OportunidadRepository.obtenerTodas()
         .map { todas -> todas.map { it.toGrupoResumen() } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Estado de los filtros. Cada uno es un MutableStateFlow privado y se expone
     // como StateFlow de solo lectura (.asStateFlow()) para respetar el flujo
@@ -34,7 +34,7 @@ class ExplorarGruposViewModel : ViewModel() {
                     grupo.nombre.contains(texto, ignoreCase = true) ||
                     grupo.proveedor.contains(texto, ignoreCase = true))
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onCategoriaChange(categoria: String) { _filtroCategoria.value = categoria }
     fun onBusquedaChange(texto: String) { _textoBusqueda.value = texto }

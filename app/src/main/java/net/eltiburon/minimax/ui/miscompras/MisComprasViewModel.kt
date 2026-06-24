@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import net.eltiburon.minimax.data.OportunidadRepository
 import net.eltiburon.minimax.data.ParticipacionRepository
 import net.eltiburon.minimax.data.UsuarioRepository
@@ -54,18 +55,18 @@ class MisComprasViewModel : ViewModel() {
                 }
                 .sortedByDescending { it.fechaMillis }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val comprasFiltradas: StateFlow<List<CompraUi>> = combine(
         comprasDelUsuario, _tabSeleccionada
     ) { compras, tab -> compras.filter { it.estado == tab } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onTabChange(estado: EstadoCompra) {
         _tabSeleccionada.value = estado
     }
 
     fun cancelar(participacionId: String) {
-        ParticipacionRepository.cancelar(participacionId)
+        viewModelScope.launch { ParticipacionRepository.cancelar(participacionId) }
     }
 }
