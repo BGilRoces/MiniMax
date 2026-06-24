@@ -13,13 +13,17 @@ import androidx.compose.ui.unit.sp
 import net.eltiburon.minimax.ui.theme.*
 
 /**
- * Pantalla unificada de gestión del proveedor. Antes "Pedidos recibidos" y "Grupos publicados"
- * eran dos ítems separados de la bottom bar que mostraban vistas muy parecidas; acá se combinan
- * en una sola sección con pestañas, liberando un lugar en la barra para el Catálogo.
+ * Pantalla de gestión de ventas del proveedor: "Pedidos recibidos" (participaciones reales de
+ * los compradores) y "Grupos publicados" (oportunidades reales del proveedor), ambas leyendo
+ * de Room. [pestañaInicial] permite abrir directo en una pestaña puntual (ej. desde la
+ * confirmación de publicación, que lleva a "Grupos publicados").
  */
 @Composable
-fun VentasProveedorScreen() {
-    var pestania by rememberSaveable { mutableStateOf(0) }
+fun VentasProveedorScreen(
+    pestañaInicial: Int = 0,
+    onGrupoClick: (String) -> Unit = {}
+) {
+    var pestania by rememberSaveable(pestañaInicial) { mutableStateOf(pestañaInicial) }
 
     Column(
         modifier = Modifier
@@ -36,8 +40,8 @@ fun VentasProveedorScreen() {
         }
 
         when (pestania) {
-            0 -> PedidosProveedorScreen()
-            else -> OportunidadesProveedorScreen()
+            0 -> PedidosProveedorScreen(onGrupoClick = onGrupoClick)
+            else -> OportunidadesProveedorScreen(onGrupoClick = onGrupoClick)
         }
     }
 }

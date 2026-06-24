@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,12 +23,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import net.eltiburon.minimax.model.EstadoCompra
 import net.eltiburon.minimax.ui.common.MiniMaxTopBar
 import net.eltiburon.minimax.ui.theme.*
 import net.eltiburon.minimax.util.formatearPrecio
 
 @Composable
 fun PedidosProveedorScreen(
+    onGrupoClick: (String) -> Unit = {},
     viewModel: PedidosProveedorViewModel = viewModel()
 ) {
     val pedidos by viewModel.pedidos.collectAsState()
@@ -49,7 +51,7 @@ fun PedidosProveedorScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FiltroChip("Todos", filtro == null) { viewModel.onFiltroChange(null) }
-                EstadoPedidoProveedor.entries.forEach { estado ->
+                EstadoCompra.entries.forEach { estado ->
                     FiltroChip(estado.label, filtro == estado) { viewModel.onFiltroChange(estado) }
                 }
             }
@@ -63,7 +65,7 @@ fun PedidosProveedorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(pedidos, key = { it.id }) { pedido ->
-                        PedidoProveedorCard(pedido)
+                        PedidoProveedorCard(pedido, onClick = { onGrupoClick(pedido.oportunidadId) })
                     }
                 }
             }
@@ -89,8 +91,9 @@ private fun FiltroChip(texto: String, seleccionado: Boolean, onClick: () -> Unit
 }
 
 @Composable
-private fun PedidoProveedorCard(pedido: PedidoProveedor) {
+private fun PedidoProveedorCard(pedido: PedidoProveedor, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -102,23 +105,31 @@ private fun PedidoProveedorCard(pedido: PedidoProveedor) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = pedido.producto,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = MiniMaxTextPrimary,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = pedido.producto,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MiniMaxTextPrimary
+                    )
+                    if (pedido.proveedor.isNotBlank()) {
+                        Text(
+                            text = pedido.proveedor,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
                 Spacer(Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(pedido.estado.color.copy(alpha = 0.12f))
+                        .background(pedido.estado.colorBadge.copy(alpha = 0.12f))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = pedido.estado.label,
-                        color = pedido.estado.color,
+                        color = pedido.estado.colorBadge,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -131,9 +142,9 @@ private fun PedidoProveedorCard(pedido: PedidoProveedor) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                InfoChip(Icons.Filled.Group, "${pedido.compradores} compradores")
+                InfoChip(Icons.Filled.Person, pedido.compradorEmail)
                 Spacer(Modifier.width(14.dp))
-                InfoChip(Icons.Filled.ShoppingBag, "${pedido.unidades} u.")
+                InfoChip(Icons.Filled.ShoppingBag, "${pedido.cantidad} u.")
                 Spacer(Modifier.weight(1f))
                 Text(text = pedido.fecha, fontSize = 12.sp, color = Color.Gray)
             }
@@ -154,10 +165,10 @@ private fun PedidoProveedorCard(pedido: PedidoProveedor) {
                         tint = Color.Gray,
                         modifier = Modifier.size(15.dp)
                     )
-                    Text(text = "Total del lote", fontSize = 13.sp, color = Color.Gray)
+                    Text(text = "Subtotal del pedido", fontSize = 13.sp, color = Color.Gray)
                 }
                 Text(
-                    text = formatearPrecio(pedido.total),
+                    text = formatearPrecio(pedido.subtotal),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = MiniMaxTextPrimary

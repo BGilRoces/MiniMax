@@ -45,11 +45,11 @@ import net.eltiburon.minimax.ui.home.HomeScreen
 import net.eltiburon.minimax.ui.miscompras.MisComprasScreen
 import net.eltiburon.minimax.ui.perfil.MiPerfilScreen
 import net.eltiburon.minimax.ui.analitica.AnaliticaScreen
-import net.eltiburon.minimax.ui.inventario.InventarioScreen
 import net.eltiburon.minimax.ui.notificaciones.NotificacionesScreen
 import net.eltiburon.minimax.ui.proveedor.CatalogoProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.DashboardProveedorScreen
 import net.eltiburon.minimax.ui.proveedor.NuevaOportunidadScreen
+import net.eltiburon.minimax.ui.proveedor.PublicacionExitosaScreen
 import net.eltiburon.minimax.ui.proveedor.VentasProveedorScreen
 import net.eltiburon.minimax.ui.seleccionrol.SeleccionRolScreen
 import net.eltiburon.minimax.ui.theme.MiniMaxTheme
@@ -69,12 +69,12 @@ object Rutas {
     const val MI_PERFIL = "mi_perfil"
     const val MIS_COMPRAS = "mis_compras"
     const val NOTIFICACIONES = "notificaciones"
-    const val INVENTARIO = "inventario"
     const val ANALITICA = "analitica"
-    const val VENTAS_PROVEEDOR = "ventas_proveedor"
     const val CATALOGO_PROVEEDOR = "catalogo_proveedor"
+    const val PUBLICACION_EXITOSA = "publicacion_exitosa"
 
     // Rutas con argumentos.
+    const val VENTAS_PROVEEDOR = "ventas_proveedor?tab={tab}"
     const val NUEVA_OPORTUNIDAD = "nueva_oportunidad?oportunidadId={oportunidadId}"
     const val GRUPO_DETALLE = "grupo_detalle/{grupoId}"
     const val ELEGIR_CANTIDAD = "elegir_cantidad/{grupoId}"
@@ -88,6 +88,9 @@ object Rutas {
     // login/registro reciben el rol elegido en SeleccionRol para saber a dónde ir tras autenticarse.
     fun login(rol: String) = "login/$rol"
     fun registro(rol: String) = "registro/$rol"
+
+    // ventas_proveedor recibe qué pestaña abrir (0 = Pedidos, 1 = Grupos publicados).
+    fun ventasProveedor(tab: Int = 0) = "ventas_proveedor?tab=$tab"
 
     // nueva_oportunidad sirve tanto para crear (sin id) como para editar (con id).
     fun nuevaOportunidad(oportunidadId: String? = null) =
@@ -290,8 +293,30 @@ private fun MiniMaxNavHost() {
             val oportunidadId = backStackEntry.arguments?.getString("oportunidadId")
             NuevaOportunidadScreen(
                 oportunidadId = oportunidadId,
-                onPublicadoOk = { navController.popBackStack() },
+                onPublicadoOk = { esNuevaPublicacion ->
+                    if (esNuevaPublicacion) {
+                        // Solo al publicar (no al editar) se muestra la confirmación de éxito.
+                        navController.navigate(Rutas.PUBLICACION_EXITOSA) {
+                            popUpTo(Rutas.DASHBOARD_PROVEEDOR) { inclusive = false }
+                        }
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
                 onCancelar = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.PUBLICACION_EXITOSA) {
+            PublicacionExitosaScreen(
+                onVerGruposClick = {
+                    navController.navigate(Rutas.ventasProveedor(tab = 1)) {
+                        popUpTo(Rutas.DASHBOARD_PROVEEDOR) { inclusive = false }
+                    }
+                },
+                onVolverDashboardClick = {
+                    navController.popBackStack(Rutas.DASHBOARD_PROVEEDOR, inclusive = false)
+                }
             )
         }
 
@@ -389,16 +414,19 @@ private fun MiniMaxNavHost() {
             NotificacionesScreen()
         }
 
-        composable(Rutas.INVENTARIO) {
-            InventarioScreen()
-        }
-
         composable(Rutas.ANALITICA) {
             AnaliticaScreen()
         }
 
-        composable(Rutas.VENTAS_PROVEEDOR) {
-            VentasProveedorScreen()
+        composable(
+            route = Rutas.VENTAS_PROVEEDOR,
+            arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })
+        ) { backStackEntry ->
+            val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+            VentasProveedorScreen(
+                pestañaInicial = tab,
+                onGrupoClick = { id -> navController.navigate(Rutas.grupoDetalle(id)) }
+            )
         }
 
         composable(Rutas.CATALOGO_PROVEEDOR) {

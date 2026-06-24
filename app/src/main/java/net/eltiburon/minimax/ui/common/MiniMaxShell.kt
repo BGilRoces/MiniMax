@@ -52,7 +52,6 @@ object ShellRutas {
     const val HOME = "home"
     const val MIS_COMPRAS = "mis_compras"
     const val EXPLORAR_GRUPOS = "explorar_grupos"
-    const val INVENTARIO = "inventario"
     const val ANALITICA = "analitica"
     const val MI_PERFIL = "mi_perfil"
     const val NOTIFICACIONES = "notificaciones"
@@ -89,7 +88,6 @@ private val compradorDrawerItems = listOf(
     ShellDrawerItem(ShellRutas.HOME, "Dashboard", Icons.Filled.Home),
     ShellDrawerItem(ShellRutas.MIS_COMPRAS, "Mis Pedidos", Icons.Filled.ShoppingBag),
     ShellDrawerItem(ShellRutas.EXPLORAR_GRUPOS, "Grupos", Icons.Filled.Group),
-    ShellDrawerItem(ShellRutas.INVENTARIO, "Inventario", Icons.Filled.Inventory2),
     ShellDrawerItem(ShellRutas.ANALITICA, "Analítica", Icons.Filled.BarChart),
     ShellDrawerItem(ShellRutas.MI_PERFIL, "Mi Perfil", Icons.Filled.Person)
 )
@@ -107,7 +105,6 @@ val rutasConBarras: Set<String> = setOf(
     ShellRutas.HOME,
     ShellRutas.MIS_COMPRAS,
     ShellRutas.EXPLORAR_GRUPOS,
-    ShellRutas.INVENTARIO,
     ShellRutas.ANALITICA,
     ShellRutas.MI_PERFIL,
     ShellRutas.NOTIFICACIONES,
@@ -125,7 +122,6 @@ fun rutaBase(route: String?): String =
 fun subtituloDe(rutaBase: String): String? = when (rutaBase) {
     ShellRutas.MIS_COMPRAS -> "Mis Pedidos"
     ShellRutas.EXPLORAR_GRUPOS -> "Explorar grupos"
-    ShellRutas.INVENTARIO -> "Inventario"
     ShellRutas.ANALITICA -> "Analítica"
     ShellRutas.MI_PERFIL -> "Mi perfil"
     ShellRutas.NOTIFICACIONES -> "Notificaciones"

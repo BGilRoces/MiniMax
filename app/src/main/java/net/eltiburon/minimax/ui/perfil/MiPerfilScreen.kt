@@ -45,6 +45,8 @@ fun MiPerfilScreen(
     val estadisticas by viewModel.estadisticas.collectAsState()
     val modoEdicion by viewModel.modoEdicion.collectAsState()
     val fotoUri by viewModel.fotoUri.collectAsState()
+    val esProveedor by viewModel.esProveedor.collectAsState()
+    val rolLabel by viewModel.rolLabel.collectAsState()
     val nombre by viewModel.nombreEdit.collectAsState()
     val email by viewModel.emailEdit.collectAsState()
     val telefono by viewModel.telefonoEdit.collectAsState()
@@ -120,7 +122,7 @@ fun MiPerfilScreen(
             item {
                 AvatarSection(
                     nombre = usuario.nombre,
-                    rolLabel = viewModel.rolLabel,
+                    rolLabel = rolLabel,
                     fotoUri = fotoUri,
                     modoEdicion = modoEdicion,
                     onToggleEdicion = viewModel::toggleEdicion,
@@ -129,7 +131,7 @@ fun MiPerfilScreen(
             }
             item {
                 // El proveedor no tiene ahorro ni pedidos: reutiliza las métricas del dashboard.
-                if (viewModel.esProveedor) {
+                if (esProveedor) {
                     ProveedorStatsCard(metricas = metricasProveedor())
                 } else {
                     StatsCard(

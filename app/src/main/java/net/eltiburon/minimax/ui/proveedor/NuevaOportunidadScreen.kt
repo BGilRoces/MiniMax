@@ -41,7 +41,7 @@ private val categorias = listOf(
 @Composable
 fun NuevaOportunidadScreen(
     oportunidadId: String? = null,
-    onPublicadoOk: () -> Unit = {},
+    onPublicadoOk: (esNuevaPublicacion: Boolean) -> Unit = {},
     onCancelar: () -> Unit = {},
     viewModel: NuevaOportunidadViewModel = viewModel()
 ) {
@@ -221,7 +221,7 @@ fun NuevaOportunidadScreen(
                     onPublicar = {
                         viewModel.publicar(oportunidadId) { exito, mensaje ->
                             scope.launch { snackbarHostState.showSnackbar(mensaje) }
-                            if (exito) onPublicadoOk()
+                            if (exito) onPublicadoOk(!esEdicion)
                         }
                     }
                 )
