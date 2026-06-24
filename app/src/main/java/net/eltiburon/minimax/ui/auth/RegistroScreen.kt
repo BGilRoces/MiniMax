@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,7 +48,7 @@ fun RegistroScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiniMaxBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
         Column(
@@ -68,14 +67,14 @@ fun RegistroScreen(
                 text = "Creá tu cuenta",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = MiniMaxTextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Sumate a MiniMax para acceder a compras colaborativas.",
                 fontSize = 14.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
@@ -163,12 +162,12 @@ fun RegistroScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 if (cargando) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -182,10 +181,15 @@ fun RegistroScreen(
                 Text(
                     text = "¿Ya tenés cuenta?",
                     fontSize = 13.sp,
-                    color = MiniMaxTextPrimary.copy(alpha = 0.65f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
                 )
                 TextButton(onClick = onIrALogin) {
-                    Text("Iniciar sesión", color = MiniMaxAccent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(
+                        "Iniciar sesión",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
                 }
             }
         }

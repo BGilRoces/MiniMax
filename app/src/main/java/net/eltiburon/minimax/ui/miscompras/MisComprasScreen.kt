@@ -38,7 +38,7 @@ fun MisComprasScreen(
     val tabSeleccionada by viewModel.tabSeleccionada.collectAsState()
     val compras by viewModel.comprasFiltradas.collectAsState()
 
-    Scaffold(containerColor = MiniMaxBackground) { innerPadding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -48,8 +48,8 @@ fun MisComprasScreen(
 
             TabRow(
                 selectedTabIndex = TABS.indexOf(tabSeleccionada),
-                containerColor = Color.White,
-                contentColor = MiniMaxPrimary
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
                 TABS.forEach { estado ->
                     Tab(
@@ -102,7 +102,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Filled.Inventory2,
             contentDescription = null,
-            tint = MiniMaxPrimary.copy(alpha = 0.25f),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
             modifier = Modifier.size(72.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -110,7 +110,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             text = "No tenés compras en esta categoría",
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MiniMaxTextPrimary.copy(alpha = 0.65f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             textAlign = TextAlign.Center
         )
     }
@@ -145,7 +145,7 @@ private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -164,20 +164,20 @@ private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
                         text = oportunidad.nombre,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = MiniMaxTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = oportunidad.proveedor,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Cantidad comprometida: ${compra.cantidad}",
                         fontSize = 12.sp,
-                        color = MiniMaxTextPrimary.copy(alpha = 0.75f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                     )
                 }
 
@@ -194,13 +194,13 @@ private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
                 Text(
                     text = "Progreso del grupo",
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "${oportunidad.progresoActual}%",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -210,8 +210,8 @@ private fun CompraCard(compra: CompraUi, onCancelar: () -> Unit) {
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = MiniMaxTeal,
-                trackColor = MiniMaxProgressBg
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
             if (compra.estado == EstadoCompra.ACTIVA) {
@@ -248,9 +248,9 @@ private fun OportunidadThumbnail(oportunidad: Oportunidad, modifier: Modifier = 
 @Composable
 private fun EstadoBadge(estado: EstadoCompra) {
     val color = when (estado) {
-        EstadoCompra.ACTIVA -> MiniMaxTeal
-        EstadoCompra.COMPLETADA -> MiniMaxAccent
-        EstadoCompra.CANCELADA -> MiniMaxBadgeRed
+        EstadoCompra.ACTIVA -> MaterialTheme.colorScheme.tertiary
+        EstadoCompra.COMPLETADA -> MaterialTheme.colorScheme.secondary
+        EstadoCompra.CANCELADA -> MaterialTheme.colorScheme.error
     }
     Box(
         modifier = Modifier

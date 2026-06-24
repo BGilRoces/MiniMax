@@ -45,7 +45,7 @@ fun ConfirmacionParticipacionScreen(
     val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
-        containerColor = MiniMaxBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -125,7 +125,7 @@ private fun ExitoBlock(modifier: Modifier = Modifier) {
             text = "¡Te sumaste al grupo!",
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
-            color = MiniMaxTextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             lineHeight = 30.sp
         )
@@ -133,7 +133,7 @@ private fun ExitoBlock(modifier: Modifier = Modifier) {
         Text(
             text = "Tu participación fue registrada correctamente.",
             fontSize = 15.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.68f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f),
             textAlign = TextAlign.Center,
             lineHeight = 22.sp
         )
@@ -141,7 +141,7 @@ private fun ExitoBlock(modifier: Modifier = Modifier) {
         Text(
             text = "Podés seguir el avance del grupo desde Mis compras.",
             fontSize = 13.sp,
-            color = MiniMaxAccent,
+            color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Medium,
             lineHeight = 19.sp
@@ -160,7 +160,7 @@ private fun ResumenParticipacionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -168,7 +168,7 @@ private fun ResumenParticipacionCard(
                 Icon(
                     imageVector = Icons.Filled.Receipt,
                     contentDescription = null,
-                    tint = MiniMaxAccent,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -176,7 +176,7 @@ private fun ResumenParticipacionCard(
                     text = "Resumen de tu participación",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -190,7 +190,7 @@ private fun ResumenParticipacionCard(
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
-                color = Color(0xFFE5E7EB)
+                color = MaterialTheme.colorScheme.surfaceVariant
             )
 
             ResumenFila(
@@ -247,27 +247,27 @@ private fun ResumenParticipacionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxTeal.copy(alpha = 0.10f))
+                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Filled.Groups,
                     contentDescription = null,
-                    tint = MiniMaxTeal,
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(
                     text = "Estado: ",
                     fontSize = 13.sp,
-                    color = MiniMaxTextPrimary.copy(alpha = 0.65f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                 )
                 Text(
                     text = "Grupo activo",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
@@ -286,14 +286,14 @@ private fun ResumenFila(
             Text(
                 text = label,
                 fontSize = 12.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.55f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = valor,
                 fontSize = 14.sp,
                 fontWeight = if (negrita) FontWeight.Bold else FontWeight.SemiBold,
-                color = MiniMaxTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 lineHeight = 20.sp
             )
         }
@@ -306,13 +306,13 @@ private fun ResumenFila(
             Text(
                 text = label,
                 fontSize = 13.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.55f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
             )
             Text(
                 text = valor,
                 fontSize = 14.sp,
                 fontWeight = if (negrita) FontWeight.Bold else FontWeight.Normal,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -323,7 +323,7 @@ private fun ProximosPasosCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MiniMaxPrimary.copy(alpha = 0.04f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -331,18 +331,18 @@ private fun ProximosPasosCard(modifier: Modifier = Modifier) {
                 text = "¿Qué sigue?",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = MiniMaxPrimary
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
             PasoItem(
                 icon = Icons.Filled.Notifications,
-                iconColor = MiniMaxAccent,
+                iconColor = MaterialTheme.colorScheme.secondary,
                 texto = "Seguiremos notificándote cuando el grupo avance."
             )
             Spacer(modifier = Modifier.height(10.dp))
             PasoItem(
                 icon = Icons.Filled.Groups,
-                iconColor = MiniMaxTeal,
+                iconColor = MaterialTheme.colorScheme.tertiary,
                 texto = "La compra se confirma cuando se alcanza el mínimo mayorista."
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -376,7 +376,7 @@ private fun PasoItem(icon: ImageVector, iconColor: Color, texto: String) {
         Text(
             text = texto,
             fontSize = 13.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.70f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.70f),
             lineHeight = 18.sp,
             modifier = Modifier.padding(top = 4.dp)
         )
@@ -399,7 +399,7 @@ private fun BotonesNavegacion(
                 .fillMaxWidth()
                 .height(54.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MiniMaxAccent)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Icon(
                 imageVector = Icons.Filled.ShoppingBag,
@@ -420,8 +420,8 @@ private fun BotonesNavegacion(
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(14.dp),
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxPrimary),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxPrimary)
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = "Volver al inicio",

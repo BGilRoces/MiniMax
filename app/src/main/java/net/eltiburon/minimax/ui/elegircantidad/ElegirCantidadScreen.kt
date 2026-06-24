@@ -42,7 +42,7 @@ fun ElegirCantidadScreen(
     val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
-        containerColor = MiniMaxBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -118,7 +118,7 @@ private fun ProductoResumenCard(producto: ProductoParticipacion, modifier: Modif
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -129,14 +129,14 @@ private fun ProductoResumenCard(producto: ProductoParticipacion, modifier: Modif
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(MiniMaxTeal.copy(alpha = 0.10f))
-                    .border(1.dp, MiniMaxTeal.copy(alpha = 0.28f), RoundedCornerShape(14.dp)),
+                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f))
+                    .border(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.28f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Inventory2,
                     contentDescription = "Producto",
-                    tint = MiniMaxTeal,
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(44.dp)
                 )
             }
@@ -147,14 +147,14 @@ private fun ProductoResumenCard(producto: ProductoParticipacion, modifier: Modif
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(MiniMaxAccent.copy(alpha = 0.11f))
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.11f))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "OFERTA GRUPAL",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MiniMaxAccent,
+                        color = MaterialTheme.colorScheme.secondary,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -163,7 +163,7 @@ private fun ProductoResumenCard(producto: ProductoParticipacion, modifier: Modif
                     text = producto.nombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = MiniMaxTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 19.sp
                 )
                 Spacer(modifier = Modifier.height(5.dp))
@@ -181,11 +181,11 @@ private fun InfoMiniFila(icon: androidx.compose.ui.graphics.vector.ImageVector, 
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(12.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = texto, fontSize = 12.sp, color = Color.Gray)
+        Text(text = texto, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -194,7 +194,7 @@ private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = M
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -207,13 +207,13 @@ private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = M
                 Text(
                     text = "Precio unitario",
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = formatearPrecio(producto.precioUnitario),
                     fontSize = 17.sp,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textDecoration = TextDecoration.LineThrough
                 )
             }
@@ -225,7 +225,7 @@ private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = M
                 Text(
                     text = "Precio grupal",
                     fontSize = 11.sp,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(3.dp))
@@ -233,14 +233,14 @@ private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = M
                     text = formatearPrecio(producto.precioMayorista),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MiniMaxTeal)
+                    .background(MaterialTheme.colorScheme.tertiary)
                     .padding(horizontal = 10.dp, vertical = 9.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -249,18 +249,18 @@ private fun BloquePrecio(producto: ProductoParticipacion, modifier: Modifier = M
                         text = "-${producto.descuentoPorcentaje}%",
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onTertiary
                     )
                     Text(
                         text = "Ahorro",
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.88f),
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.88f),
                         lineHeight = 13.sp
                     )
                     Text(
                         text = "Grupal",
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.88f),
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.88f),
                         lineHeight = 13.sp
                     )
                 }
@@ -274,7 +274,7 @@ private fun ProgresoGrupoCard(producto: ProductoParticipacion, modifier: Modifie
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -287,13 +287,13 @@ private fun ProgresoGrupoCard(producto: ProductoParticipacion, modifier: Modifie
                     text = "Progreso del Grupo",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${(producto.progresoGrupo * 100).toInt()}%",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -303,22 +303,22 @@ private fun ProgresoGrupoCard(producto: ProductoParticipacion, modifier: Modifie
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                color = MiniMaxTeal,
-                trackColor = Color(0xFFE5E7EB)
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Info,
                     contentDescription = null,
-                    tint = MiniMaxAccent,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = "Faltan sólo ${producto.cajasFaltantes} cajas para alcanzar el precio mayorista.",
                     fontSize = 12.sp,
-                    color = MiniMaxTextPrimary.copy(alpha = 0.68f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f),
                     lineHeight = 17.sp
                 )
             }
@@ -337,7 +337,7 @@ private fun SelectorCantidadCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -350,7 +350,7 @@ private fun SelectorCantidadCard(
                 text = "¿Cuántas cajas querés comprar?",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = MiniMaxTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(22.dp))
@@ -365,14 +365,14 @@ private fun SelectorCantidadCard(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(if (menosActivo) MiniMaxPrimary else Color(0xFFE5E7EB))
+                        .background(if (menosActivo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable(enabled = menosActivo, onClick = onMenos),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Remove,
                         contentDescription = "Reducir cantidad",
-                        tint = if (menosActivo) Color.White else Color(0xFFBDBDBD),
+                        tint = if (menosActivo) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -381,7 +381,7 @@ private fun SelectorCantidadCard(
                     text = cantidad.toString(),
                     fontWeight = FontWeight.Bold,
                     fontSize = 44.sp,
-                    color = MiniMaxTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .widthIn(min = 80.dp)
@@ -393,14 +393,14 @@ private fun SelectorCantidadCard(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(if (masActivo) MiniMaxTeal else Color(0xFFE5E7EB))
+                        .background(if (masActivo) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable(enabled = masActivo, onClick = onMas),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = "Aumentar cantidad",
-                        tint = if (masActivo) Color.White else Color(0xFFBDBDBD),
+                        tint = if (masActivo) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -410,7 +410,7 @@ private fun SelectorCantidadCard(
             Text(
                 text = "Máximo disponible para este grupo: $cantidadMaxima cajas",
                 fontSize = 12.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
@@ -429,7 +429,7 @@ private fun ResumenCompraCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MiniMaxPrimary.copy(alpha = 0.05f)
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -438,35 +438,35 @@ private fun ResumenCompraCard(
                 text = "Resumen de compra",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(14.dp))
 
             FilaResumen(
                 label = "Cantidad seleccionada",
                 valor = "$cantidad ${if (cantidad == 1) "caja" else "cajas"}",
-                valorColor = MiniMaxTextPrimary
+                valorColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(1.dp))
-            HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.80f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.80f))
             Spacer(modifier = Modifier.height(8.dp))
             FilaResumen(
                 label = "Precio por caja",
                 valor = formatearPrecio(precioMayorista),
-                valorColor = MiniMaxTextPrimary
+                valorColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
             FilaResumen(
                 label = "Subtotal estimado",
                 valor = formatearPrecio(subtotal),
-                valorColor = MiniMaxTextPrimary,
+                valorColor = MaterialTheme.colorScheme.onSurface,
                 negrita = true
             )
             Spacer(modifier = Modifier.height(8.dp))
             FilaResumen(
                 label = "Ahorro estimado",
                 valor = "- ${formatearPrecio(ahorro)}",
-                valorColor = MiniMaxTeal,
+                valorColor = MaterialTheme.colorScheme.tertiary,
                 negrita = true
             )
         }
@@ -488,7 +488,7 @@ private fun FilaResumen(
         Text(
             text = label,
             fontSize = 13.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.62f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
         )
         Text(
             text = valor,
@@ -515,8 +515,8 @@ private fun BotonesAccion(
                 .weight(1f)
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxPrimary),
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxPrimary)
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = "Cancelar",
@@ -531,7 +531,7 @@ private fun BotonesAccion(
                 .weight(1f)
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MiniMaxAccent)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(
                 text = "Continuar",

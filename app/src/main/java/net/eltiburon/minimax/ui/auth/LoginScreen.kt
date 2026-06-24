@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,7 +45,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiniMaxBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
         Column(
@@ -64,14 +63,14 @@ fun LoginScreen(
                 text = "Bienvenido de nuevo",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = MiniMaxTextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Iniciá sesión para seguir con tus compras colaborativas.",
                 fontSize = 14.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
@@ -133,12 +132,12 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 if (cargando) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -152,10 +151,15 @@ fun LoginScreen(
                 Text(
                     text = "¿No tenés cuenta?",
                     fontSize = 13.sp,
-                    color = MiniMaxTextPrimary.copy(alpha = 0.65f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
                 )
                 TextButton(onClick = onIrARegistro) {
-                    Text("Crear cuenta", color = MiniMaxAccent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(
+                        "Crear cuenta",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
                 }
             }
         }
@@ -168,12 +172,12 @@ internal fun LogoBadge() {
         modifier = Modifier
             .size(72.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(MiniMaxPrimary),
+            .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "M",
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onPrimary,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 38.sp
         )
@@ -182,10 +186,10 @@ internal fun LogoBadge() {
 
 @Composable
 internal fun campoColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = MiniMaxAccent,
-    unfocusedBorderColor = Color(0xFFDDD8F0),
-    focusedLabelColor = MiniMaxAccent,
-    cursorColor = MiniMaxAccent
+    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.secondary,
+    cursorColor = MaterialTheme.colorScheme.secondary
 )
 
 @Preview(showBackground = true, showSystemUi = true)

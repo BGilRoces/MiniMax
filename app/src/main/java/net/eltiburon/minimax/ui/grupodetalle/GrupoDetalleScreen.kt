@@ -56,7 +56,7 @@ fun GrupoDetalleScreen(
             onSumarseClick  = onSumarseClick
         )
     } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = MiniMaxPrimary)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -73,7 +73,7 @@ private fun GrupoDetalleContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiniMaxBackground)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
         DetalleHeader(nombre = grupo.nombre, onBack = onBack)
@@ -111,7 +111,7 @@ private fun DetalleHeader(nombre: String, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MiniMaxPrimary)
+            .background(MaterialTheme.colorScheme.primary)
             .statusBarsPadding()
             .padding(end = 16.dp)
     ) {
@@ -120,17 +120,17 @@ private fun DetalleHeader(nombre: String, onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onPrimary)
             }
             Column(modifier = Modifier.padding(vertical = 12.dp)) {
                 Text(
                     text = "Marketplace > Alimentos & Bebidas",
-                    color = Color.White.copy(alpha = 0.60f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.60f),
                     fontSize = 11.sp
                 )
                 Text(
                     text = nombre,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     maxLines = 1,
@@ -177,21 +177,27 @@ private fun HeroImageSection(grupo: GrupoDetalle) {
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            HeroBadge(text = "OFERTA GRUPAL", color = MiniMaxTeal)
+            HeroBadge(
+                text = "OFERTA GRUPAL",
+                color = MaterialTheme.colorScheme.tertiary,
+                textColor = MaterialTheme.colorScheme.onTertiary
+            )
+            // Badge decorativo de marca con fondo siempre oscuro: el texto blanco se
+            // mantiene fijo a propósito (no depende del tema, a diferencia del de arriba).
             HeroBadge(text = "PREMIUM SELECT", color = Color(0xFF374151))
         }
     }
 }
 
 @Composable
-private fun HeroBadge(text: String, color: Color) {
+private fun HeroBadge(text: String, color: Color, textColor: Color = Color.White) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
             .background(color)
             .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
-        Text(text = text, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(text = text, color = textColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -204,7 +210,7 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -214,11 +220,11 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "Precio unitario", fontSize = 11.sp, color = Color.Gray)
+                    Text(text = "Precio unitario", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
                         text = formatearPrecio(grupo.precioUnitario),
                         fontSize = 16.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textDecoration = TextDecoration.LineThrough
                     )
                 }
@@ -244,12 +250,12 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
                     text = formatearPrecio(grupo.precioMayorista),
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MiniMaxPrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = " / caja",
                     fontSize = 14.sp,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
             }
@@ -257,7 +263,7 @@ private fun PrecioBlock(grupo: GrupoDetalle) {
             Text(
                 text = "Precio mayorista grupal",
                 fontSize = 12.sp,
-                color = MiniMaxTeal,
+                color = MaterialTheme.colorScheme.tertiary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -271,7 +277,7 @@ private fun ProgresoSection(grupo: GrupoDetalle) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -284,13 +290,13 @@ private fun ProgresoSection(grupo: GrupoDetalle) {
                     text = "Progreso del Grupo",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${grupo.progresoActual}%",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
 
@@ -302,8 +308,8 @@ private fun ProgresoSection(grupo: GrupoDetalle) {
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                color = MiniMaxTeal,
-                trackColor = MiniMaxProgressBg
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -311,7 +317,7 @@ private fun ProgresoSection(grupo: GrupoDetalle) {
             Text(
                 text = "Faltan solo ${grupo.unidadesFaltantes} cajas para alcanzar el precio mayorista",
                 fontSize = 13.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -332,10 +338,10 @@ private fun InfoChipsRow(grupo: GrupoDetalle) {
         InfoChip(
             modifier = Modifier.weight(1f),
             icon = Icons.Filled.AccessTime,
-            iconTint = MiniMaxAccent,
+            iconTint = MaterialTheme.colorScheme.secondary,
             label = "Finaliza en",
             value = timer,
-            bgColor = MiniMaxAccent.copy(alpha = 0.08f)
+            bgColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f)
         )
         MembersChip(
             modifier = Modifier.weight(1f),
@@ -363,8 +369,8 @@ private fun InfoChip(
             Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text(text = label, fontSize = 10.sp, color = Color.Gray)
-                Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MiniMaxTextPrimary)
+                Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -375,15 +381,15 @@ private fun MembersChip(modifier: Modifier = Modifier, count: Int) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MiniMaxTeal.copy(alpha = 0.08f))
+            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f))
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             StackedAvatars()
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text(text = "+$count miembros", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MiniMaxTextPrimary)
-                Text(text = "activos", fontSize = 10.sp, color = Color.Gray)
+                Text(text = "+$count miembros", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "activos", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -391,21 +397,25 @@ private fun MembersChip(modifier: Modifier = Modifier, count: Int) {
 
 @Composable
 private fun StackedAvatars() {
-    val avatarData = listOf(MiniMaxPrimary to "A", MiniMaxAccent to "B", MiniMaxTeal to "C")
+    val avatarData = listOf(
+        Triple(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary, "A"),
+        Triple(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.onSecondary, "B"),
+        Triple(MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.onTertiary, "C")
+    )
     Box(modifier = Modifier.size(width = 58.dp, height = 26.dp)) {
-        avatarData.forEachIndexed { idx, (color, initial) ->
+        avatarData.forEachIndexed { idx, (bgColor, onColor, initial) ->
             Box(
                 modifier = Modifier
                     .absoluteOffset(x = (idx * 17).dp)
                     .size(26.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(2.dp)
                     .clip(CircleShape)
-                    .background(color),
+                    .background(bgColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = initial, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                Text(text = initial, color = onColor, fontSize = 8.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -422,8 +432,8 @@ private fun CTAButton(estaUnido: Boolean, onToggle: () -> Unit, onSumarseClick: 
             .height(54.dp),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (estaUnido) MiniMaxTeal else MiniMaxAccent,
-            contentColor = Color.White
+            containerColor = if (estaUnido) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
+            contentColor = if (estaUnido) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
     ) {
@@ -448,15 +458,15 @@ private fun TrustIconsRow() {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Filled.Lock, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+        Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "Pago Seguro", fontSize = 12.sp, color = Color.Gray)
+        Text(text = "Pago Seguro", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.width(16.dp))
-        Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(Color.LightGray))
+        Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.outlineVariant))
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(Icons.Filled.LocalShipping, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+        Icon(Icons.Filled.LocalShipping, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "Envío a Regiones", fontSize = 12.sp, color = Color.Gray)
+        Text(text = "Envío a Regiones", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -467,7 +477,7 @@ private fun PulsoColectivoCard(grupo: GrupoDetalle) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MiniMaxPrimary.copy(alpha = 0.07f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -477,19 +487,19 @@ private fun PulsoColectivoCard(grupo: GrupoDetalle) {
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(MiniMaxPrimary.copy(alpha = 0.12f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = MiniMaxPrimary, modifier = Modifier.size(22.dp))
+                Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(text = "Pulso Colectivo", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MiniMaxPrimary)
+                Text(text = "Pulso Colectivo", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "Este grupo creció un ${grupo.crecimientoPorcentaje}% en las últimas 2 horas",
                     fontSize = 13.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -504,13 +514,13 @@ private fun ProductInfoSection(grupo: GrupoDetalle) {
         text = grupo.nombre,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
-        color = MiniMaxTextPrimary
+        color = MaterialTheme.colorScheme.onSurface
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(
         text = grupo.descripcion,
         fontSize = 14.sp,
-        color = Color.Gray,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 22.sp
     )
 }
@@ -530,14 +540,14 @@ private fun AttributeChipsRow(grupo: GrupoDetalle) {
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MiniMaxPrimary.copy(alpha = 0.07f))
-                    .border(1.dp, MiniMaxPrimary.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.07f))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
                     .padding(horizontal = 12.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = MiniMaxPrimary, modifier = Modifier.size(14.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(5.dp))
-                Text(text = label, fontSize = 13.sp, color = MiniMaxPrimary)
+                Text(text = label, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -567,13 +577,13 @@ private fun ProveedorSection(grupo: GrupoDetalle) {
             titulo = "Logística Grupal",
             descripcion = "Envíos coordinados con centros de distribución regionales. Entregas en 48-72h hábiles.",
             badge = "Logística Eficiente",
-            badgeColor = MiniMaxTeal
+            badgeColor = MaterialTheme.colorScheme.tertiary
         ),
         ProveedorCardData(
             titulo = "Garantía MiniMax",
             descripcion = "Si el grupo no alcanza el mínimo, tu pago es devuelto automáticamente sin demoras.",
             badge = "Compra Protegida",
-            badgeColor = MiniMaxAccent
+            badgeColor = MaterialTheme.colorScheme.secondary
         )
     )
 
@@ -582,7 +592,7 @@ private fun ProveedorSection(grupo: GrupoDetalle) {
             text = "Información del Proveedor",
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            color = MiniMaxTextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -602,7 +612,7 @@ private fun ProveedorCardItem(card: ProveedorCardData) {
     Card(
         modifier = Modifier.width(220.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -615,7 +625,7 @@ private fun ProveedorCardItem(card: ProveedorCardData) {
                     text = card.titulo,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = MiniMaxPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -643,7 +653,7 @@ private fun ProveedorCardItem(card: ProveedorCardData) {
             Text(
                 text = card.descripcion,
                 fontSize = 12.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 18.sp,
                 maxLines = 5,
                 overflow = TextOverflow.Ellipsis
@@ -654,7 +664,7 @@ private fun ProveedorCardItem(card: ProveedorCardData) {
                 Text(
                     text = "Ver catálogo completo →",
                     fontSize = 12.sp,
-                    color = MiniMaxAccent,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.SemiBold
                 )
             }

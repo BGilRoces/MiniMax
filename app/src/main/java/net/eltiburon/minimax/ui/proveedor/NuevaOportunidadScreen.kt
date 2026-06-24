@@ -129,14 +129,14 @@ fun NuevaOportunidadScreen(
             confirmButton = {
                 TextButton(
                     onClick = { mostrarPermisoDenegado = false },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MiniMaxAccent)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
                 ) { Text("Entendido") }
             },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.NoPhotography,
                     contentDescription = null,
-                    tint = MiniMaxAccent
+                    tint = MaterialTheme.colorScheme.secondary
                 )
             },
             title = { Text("Permiso de cámara necesario") },
@@ -164,28 +164,28 @@ fun NuevaOportunidadScreen(
                         }
                         mostrarDatePicker = false
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MiniMaxAccent)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
                 ) { Text("OK") }
             },
             dismissButton = {
                 TextButton(
                     onClick = { mostrarDatePicker = false },
-                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
                 ) { Text("Cancelar") }
             }
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    selectedDayContainerColor = MiniMaxAccent,
-                    todayDateBorderColor = MiniMaxAccent
+                    selectedDayContainerColor = MaterialTheme.colorScheme.secondary,
+                    todayDateBorderColor = MaterialTheme.colorScheme.secondary
                 )
             )
         }
     }
 
     Scaffold(
-        containerColor = MiniMaxBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         LazyColumn(
@@ -321,7 +321,7 @@ private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MiniMaxPrimary)
+            .background(MaterialTheme.colorScheme.primary)
             .statusBarsPadding()
             .padding(horizontal = 4.dp, vertical = 12.dp)
     ) {
@@ -333,7 +333,7 @@ private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Volver",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
@@ -341,12 +341,12 @@ private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxAccent),
+                    .background(MaterialTheme.colorScheme.secondary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "M",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSecondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -354,7 +354,7 @@ private fun NuevaOportunidadHeader(onBackClick: () -> Unit) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "MiniMax",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -373,7 +373,7 @@ private fun TituloBlock(esEdicion: Boolean) {
             text = if (esEdicion) "Editar oportunidad" else "Nueva oportunidad",
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
-            color = MiniMaxTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -383,7 +383,7 @@ private fun TituloBlock(esEdicion: Boolean) {
                 "Completá los datos del producto para publicarlo como compra grupal."
             },
             fontSize = 14.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.60f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.60f),
             lineHeight = 20.sp
         )
     }
@@ -399,7 +399,7 @@ private fun ImagenProductoCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -407,7 +407,7 @@ private fun ImagenProductoCard(
                 text = "Imagen del producto",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -418,7 +418,7 @@ private fun ImagenProductoCard(
                         .fillMaxWidth()
                         .height(180.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MiniMaxPrimary.copy(alpha = 0.04f))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.04f))
                 ) {
                     UriImage(
                         uri = imagenUri,
@@ -446,8 +446,8 @@ private fun ImagenProductoCard(
                     onClick = onAgregarImagen,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxAccent),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxAccent)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
@@ -463,10 +463,10 @@ private fun ImagenProductoCard(
                         .fillMaxWidth()
                         .height(130.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MiniMaxPrimary.copy(alpha = 0.04f))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.04f))
                         .border(
                             width = 1.5.dp,
-                            color = MiniMaxPrimary.copy(alpha = 0.22f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
                             shape = RoundedCornerShape(12.dp)
                         )
                         .clickable(onClick = onAgregarImagen),
@@ -479,13 +479,13 @@ private fun ImagenProductoCard(
                         Icon(
                             imageVector = Icons.Filled.CloudUpload,
                             contentDescription = null,
-                            tint = MiniMaxAccent,
+                            tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(38.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Agregar imagen",
-                            color = MiniMaxAccent,
+                            color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp
                         )
@@ -495,7 +495,7 @@ private fun ImagenProductoCard(
                 Text(
                     text = "Tomá una foto del producto con la cámara.",
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -529,7 +529,7 @@ private fun FormularioCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -557,7 +557,7 @@ private fun FormularioCard(
                         Icon(
                             imageVector = Icons.Filled.Category,
                             contentDescription = null,
-                            tint = MiniMaxAccent,
+                            tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -646,7 +646,7 @@ private fun FormularioCard(
                     Icon(
                         imageVector = Icons.Filled.DateRange,
                         contentDescription = null,
-                        tint = MiniMaxAccent,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(20.dp)
                     )
                 },
@@ -655,11 +655,11 @@ private fun FormularioCard(
                         Icon(
                             imageVector = Icons.Filled.Event,
                             contentDescription = "Abrir calendario",
-                            tint = MiniMaxAccent
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
                 },
-                placeholder = { Text("DD/MM/AAAA", color = Color.LightGray, fontSize = 14.sp) },
+                placeholder = { Text("DD/MM/AAAA", color = MaterialTheme.colorScheme.outlineVariant, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = campoColors()
@@ -668,7 +668,7 @@ private fun FormularioCard(
             Text(
                 text = "* Campos obligatorios",
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -700,7 +700,7 @@ private fun CampoTexto(
                     Icon(
                         imageVector = leadingIcon,
                         contentDescription = null,
-                        tint = MiniMaxAccent,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier
                             .padding(top = 16.dp)
                             .size(20.dp)
@@ -710,13 +710,13 @@ private fun CampoTexto(
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
-                    tint = MiniMaxAccent,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(20.dp)
                 )
             }
         },
         placeholder = if (placeholder.isNotEmpty()) {
-            { Text(placeholder, color = Color.LightGray, fontSize = 14.sp) }
+            { Text(placeholder, color = MaterialTheme.colorScheme.outlineVariant, fontSize = 14.sp) }
         } else null,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = singleLine,
@@ -739,10 +739,10 @@ private fun LabelObligatorio(texto: String, obligatorio: Boolean) {
 
 @Composable
 private fun campoColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = MiniMaxAccent,
-    unfocusedBorderColor = Color(0xFFDDD8F0),
-    focusedLabelColor = MiniMaxAccent,
-    cursorColor = MiniMaxAccent
+    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.secondary,
+    cursorColor = MaterialTheme.colorScheme.secondary
 )
 
 @Composable
@@ -762,8 +762,8 @@ private fun BotonesAccion(
                 .weight(1f)
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxAccent),
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxAccent)
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary)
         ) {
             Icon(
                 imageVector = Icons.Filled.Save,
@@ -780,7 +780,7 @@ private fun BotonesAccion(
                 .weight(1f)
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MiniMaxTeal)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
         ) {
             Icon(
                 imageVector = if (esEdicion) Icons.Filled.Save else Icons.Filled.Publish,

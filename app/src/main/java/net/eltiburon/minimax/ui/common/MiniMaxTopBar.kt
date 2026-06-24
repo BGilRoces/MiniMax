@@ -7,17 +7,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import net.eltiburon.minimax.ui.theme.MiniMaxAccent
-import net.eltiburon.minimax.ui.theme.MiniMaxPrimary
 
 /**
  * Encabezado reutilizable de la app: logo "M" + "MiniMax" + subtítulo opcional + botón volver.
@@ -34,7 +32,7 @@ fun MiniMaxTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MiniMaxPrimary)
+            .background(MaterialTheme.colorScheme.primary)
             .statusBarsPadding()
             .padding(horizontal = 4.dp, vertical = 12.dp)
     ) {
@@ -46,7 +44,7 @@ fun MiniMaxTopBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Volver",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
@@ -54,12 +52,12 @@ fun MiniMaxTopBar(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MiniMaxAccent),
+                    .background(MaterialTheme.colorScheme.secondary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "M",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSecondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -68,7 +66,7 @@ fun MiniMaxTopBar(
             Column {
                 Text(
                     text = "MiniMax",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = if (subtitulo != null) 18.sp else 20.sp,
                     lineHeight = 20.sp
@@ -76,7 +74,7 @@ fun MiniMaxTopBar(
                 if (subtitulo != null) {
                     Text(
                         text = subtitulo,
-                        color = Color.White.copy(alpha = 0.78f),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f),
                         fontSize = 12.sp,
                         lineHeight = 14.sp
                     )

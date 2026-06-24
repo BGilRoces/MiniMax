@@ -43,7 +43,7 @@ fun ConfirmarParticipacionScreen(
     val ahorro by viewModel.ahorro.collectAsState()
 
     Scaffold(
-        containerColor = MiniMaxBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -114,7 +114,7 @@ private fun ResumenProductoCard(producto: ProductoParticipacion, modifier: Modif
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -125,13 +125,13 @@ private fun ResumenProductoCard(producto: ProductoParticipacion, modifier: Modif
                 modifier = Modifier
                     .size(76.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MiniMaxTeal.copy(alpha = 0.10f)),
+                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Inventory2,
                     contentDescription = null,
-                    tint = MiniMaxTeal,
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(38.dp)
                 )
             }
@@ -149,7 +149,7 @@ private fun ResumenProductoCard(producto: ProductoParticipacion, modifier: Modif
                         text = formatearPrecio(producto.precioMayorista),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = MiniMaxTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(7.dp))
@@ -157,7 +157,7 @@ private fun ResumenProductoCard(producto: ProductoParticipacion, modifier: Modif
                     text = producto.nombre,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
-                    color = MiniMaxTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 19.sp
                 )
                 Spacer(modifier = Modifier.height(5.dp))
@@ -174,14 +174,14 @@ private fun BadgeOfertaGrupal() {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MiniMaxAccent.copy(alpha = 0.11f))
+            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.11f))
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
             text = "OFERTA GRUPAL",
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = MiniMaxAccent,
+            color = MaterialTheme.colorScheme.secondary,
             letterSpacing = 0.5.sp
         )
     }
@@ -190,9 +190,9 @@ private fun BadgeOfertaGrupal() {
 @Composable
 private fun InfoMiniFila(icon: ImageVector, texto: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(imageVector = icon, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(12.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(12.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = texto, fontSize = 12.sp, color = Color.Gray)
+        Text(text = texto, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -207,7 +207,7 @@ private fun ParticipacionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -215,7 +215,7 @@ private fun ParticipacionCard(
                 Icon(
                     imageVector = Icons.Filled.ShoppingBag,
                     contentDescription = null,
-                    tint = MiniMaxAccent,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(7.dp))
@@ -223,7 +223,7 @@ private fun ParticipacionCard(
                     text = "Tu participación",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             Spacer(modifier = Modifier.height(14.dp))
@@ -231,24 +231,24 @@ private fun ParticipacionCard(
             FilaParticipacion(
                 label = "Cantidad seleccionada",
                 valor = "$cantidadSeleccionada ${if (cantidadSeleccionada == 1) "caja" else "cajas"}",
-                valorColor = MiniMaxTextPrimary
+                valorColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
             FilaParticipacion(
                 label = "Precio por caja",
                 valor = formatearPrecio(precioMayorista),
-                valorColor = MiniMaxTextPrimary
+                valorColor = MaterialTheme.colorScheme.onSurface
             )
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 10.dp),
-                color = Color(0xFFE5E7EB)
+                color = MaterialTheme.colorScheme.surfaceVariant
             )
 
             FilaParticipacion(
                 label = "Subtotal estimado",
                 valor = formatearPrecio(subtotal),
-                valorColor = MiniMaxTextPrimary,
+                valorColor = MaterialTheme.colorScheme.onSurface,
                 negrita = true,
                 fontSize = 16
             )
@@ -258,7 +258,7 @@ private fun ParticipacionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MiniMaxTeal.copy(alpha = 0.08f))
+                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f))
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -267,14 +267,14 @@ private fun ParticipacionCard(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                         contentDescription = null,
-                        tint = MiniMaxTeal,
+                        tint = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Ahorro estimado",
                         fontSize = 13.sp,
-                        color = MiniMaxTeal,
+                        color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -282,7 +282,7 @@ private fun ParticipacionCard(
                     text = "- ${formatearPrecio(ahorro)}",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
@@ -305,7 +305,7 @@ private fun FilaParticipacion(
         Text(
             text = label,
             fontSize = 13.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.60f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.60f)
         )
         Text(
             text = valor,
@@ -321,7 +321,7 @@ private fun EstadoGrupoCard(producto: ProductoParticipacion, modifier: Modifier 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -334,13 +334,13 @@ private fun EstadoGrupoCard(producto: ProductoParticipacion, modifier: Modifier 
                     text = "Estado del grupo",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${(producto.progresoGrupo * 100).toInt()}%",
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    color = MiniMaxTeal
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -350,8 +350,8 @@ private fun EstadoGrupoCard(producto: ProductoParticipacion, modifier: Modifier 
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp)),
-                color = MiniMaxTeal,
-                trackColor = Color(0xFFE5E7EB)
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
             Spacer(modifier = Modifier.height(14.dp))
             InfoGrupoFila(
@@ -362,7 +362,7 @@ private fun EstadoGrupoCard(producto: ProductoParticipacion, modifier: Modifier 
             Spacer(modifier = Modifier.height(8.dp))
             InfoGrupoFila(
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
-                iconColor = MiniMaxTeal,
+                iconColor = MaterialTheme.colorScheme.tertiary,
                 texto = "Tu participación ayuda a acercar el grupo al mínimo mayorista."
             )
         }
@@ -384,7 +384,7 @@ private fun InfoGrupoFila(icon: ImageVector, iconColor: Color, texto: String) {
         Text(
             text = texto,
             fontSize = 12.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.68f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f),
             lineHeight = 17.sp
         )
     }
@@ -395,7 +395,7 @@ private fun CondicionesCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MiniMaxPrimary.copy(alpha = 0.04f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -403,12 +403,12 @@ private fun CondicionesCard(modifier: Modifier = Modifier) {
                 text = "Condiciones",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = MiniMaxPrimary
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
             CondicionItem(
                 icon = Icons.Filled.Groups,
-                iconColor = MiniMaxAccent,
+                iconColor = MaterialTheme.colorScheme.secondary,
                 texto = "La compra se confirma cuando el grupo alcanza el mínimo requerido."
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -420,7 +420,7 @@ private fun CondicionesCard(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(10.dp))
             CondicionItem(
                 icon = Icons.Filled.Notifications,
-                iconColor = MiniMaxAccent,
+                iconColor = MaterialTheme.colorScheme.secondary,
                 texto = "Recibirás una notificación mock cuando el grupo avance."
             )
         }
@@ -448,7 +448,7 @@ private fun CondicionItem(icon: ImageVector, iconColor: Color, texto: String) {
         Text(
             text = texto,
             fontSize = 13.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.70f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.70f),
             lineHeight = 18.sp,
             modifier = Modifier.padding(top = 4.dp)
         )
@@ -460,7 +460,7 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -468,7 +468,7 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
                 text = "Método de pago",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -478,13 +478,13 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
                         .width(4.dp)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp))
-                        .background(MiniMaxAccent)
+                        .background(MaterialTheme.colorScheme.secondary)
                 )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
-                        .background(MiniMaxAccent.copy(alpha = 0.06f))
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.06f))
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -492,13 +492,13 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .size(42.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MiniMaxPrimary.copy(alpha = 0.08f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CreditCard,
                             contentDescription = null,
-                            tint = MiniMaxPrimary,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -508,19 +508,19 @@ private fun MetodoPagoCard(modifier: Modifier = Modifier) {
                             text = "Seña pendiente / Demo",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = MiniMaxTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Pago simulado para MVP universitario",
                             fontSize = 12.sp,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = "Seleccionado",
-                        tint = MiniMaxTeal,
+                        tint = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -545,7 +545,7 @@ private fun BotonesConfirmacion(
                 .fillMaxWidth()
                 .height(54.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MiniMaxAccent)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Icon(
                 imageVector = Icons.Filled.CheckCircle,
@@ -566,8 +566,8 @@ private fun BotonesConfirmacion(
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(14.dp),
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, MiniMaxPrimary),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MiniMaxPrimary)
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = "Volver",

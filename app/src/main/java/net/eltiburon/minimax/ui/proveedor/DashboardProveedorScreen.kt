@@ -80,7 +80,7 @@ fun DashboardProveedorScreen(
     }
 
     Scaffold(
-        containerColor = MiniMaxBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             ProveedorBottomBar(
                 selectedTab = selectedTab,
@@ -122,7 +122,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MiniMaxPrimary)
+            .background(MaterialTheme.colorScheme.primary)
             .statusBarsPadding()
             .padding(horizontal = 8.dp, vertical = 16.dp)
     ) {
@@ -137,7 +137,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = "Abrir menú",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
@@ -145,12 +145,12 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MiniMaxAccent),
+                        .background(MaterialTheme.colorScheme.secondary),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "M",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -158,7 +158,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "MiniMax",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
@@ -170,7 +170,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                     Icon(
                         imageVector = Icons.Filled.Notifications,
                         contentDescription = "Notificaciones",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
@@ -178,12 +178,12 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(MiniMaxAccent),
+                        .background(MaterialTheme.colorScheme.secondary),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "JP",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
@@ -198,7 +198,7 @@ private fun ProveedorHeader(onCerrarSesion: () -> Unit) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = "Cerrar sesión",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -221,13 +221,13 @@ private fun ResumenProveedorBlock(onNuevaOportunidadClick: () -> Unit) {
             text = "Resumen de Proveedor",
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
-            color = MiniMaxTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Gestiona tus ofertas activas y monitorea el pulso de tus grupos de compra colaborativa.",
             fontSize = 14.sp,
-            color = MiniMaxTextPrimary.copy(alpha = 0.60f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.60f),
             lineHeight = 20.sp
         )
         Spacer(modifier = Modifier.height(18.dp))
@@ -237,7 +237,7 @@ private fun ResumenProveedorBlock(onNuevaOportunidadClick: () -> Unit) {
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MiniMaxAccent)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
@@ -274,14 +274,14 @@ private fun MetricasGrid() {
                 titulo = "Volumen total de ventas",
                 valor = "$142,500",
                 icon = Icons.Filled.AttachMoney,
-                iconBgColor = MiniMaxTeal
+                iconBgColor = MaterialTheme.colorScheme.tertiary
             )
             MetricaCard(
                 modifier = Modifier.weight(1f),
                 titulo = "Grupos activos",
                 valor = "24",
                 icon = Icons.Filled.Group,
-                iconBgColor = MiniMaxPrimary
+                iconBgColor = MaterialTheme.colorScheme.primary
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -294,7 +294,7 @@ private fun MetricasGrid() {
                 titulo = "Ahorro promedio",
                 valor = "18%",
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
-                iconBgColor = MiniMaxAccent
+                iconBgColor = MaterialTheme.colorScheme.secondary
             )
             MetricaCard(
                 modifier = Modifier.weight(1f),
@@ -319,7 +319,7 @@ private fun MetricaCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -342,13 +342,13 @@ private fun MetricaCard(
                 text = valor,
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = titulo,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 15.sp
             )
         }
@@ -370,7 +370,7 @@ private fun PedidosPendientesSection(pedidos: List<PedidoPendiente>) {
             text = "Pedidos Pendientes (Mínimo Alcanzado)",
             fontWeight = FontWeight.Bold,
             fontSize = 17.sp,
-            color = MiniMaxTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(12.dp))
         pedidos.forEach { pedido ->
@@ -385,7 +385,7 @@ private fun PedidoPendienteCard(pedido: PedidoPendiente) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -400,7 +400,7 @@ private fun PedidoPendienteCard(pedido: PedidoPendiente) {
                     text = pedido.nombre,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
-                    color = MiniMaxTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                     lineHeight = 19.sp
                 )
@@ -408,12 +408,12 @@ private fun PedidoPendienteCard(pedido: PedidoPendiente) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MiniMaxTeal.copy(alpha = 0.12f))
+                        .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "Mínimo ✓",
-                        color = MiniMaxTeal,
+                        color = MaterialTheme.colorScheme.tertiary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -441,7 +441,7 @@ private fun PedidoPendienteCard(pedido: PedidoPendiente) {
                 onClick = { /* validar lote futuro */ },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(
                     imageVector = Icons.Filled.CheckCircle,
@@ -465,14 +465,14 @@ private fun InfoChip(icon: ImageVector, texto: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(13.dp)
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = texto,
             fontSize = 11.sp,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -503,12 +503,12 @@ private fun CatalogoSection(
                 text = "Gestión de Catálogo",
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp,
-                color = MiniMaxTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             TextButton(onClick = { /* ver catálogo completo futuro */ }) {
                 Text(
                     text = "Ver todo",
-                    color = MiniMaxAccent,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -538,7 +538,7 @@ private fun ProductoCatalogoItem(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -552,13 +552,13 @@ private fun ProductoCatalogoItem(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MiniMaxPrimary.copy(alpha = 0.08f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Inventory2,
                     contentDescription = null,
-                    tint = MiniMaxPrimary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -571,13 +571,13 @@ private fun ProductoCatalogoItem(
                     text = producto.nombre,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "${producto.unidades} unidades",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -587,12 +587,12 @@ private fun ProductoCatalogoItem(
                     text = producto.precio,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = MiniMaxTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "por unidad",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -601,7 +601,7 @@ private fun ProductoCatalogoItem(
                 Icon(
                     imageVector = Icons.Filled.Edit,
                     contentDescription = "Editar oportunidad",
-                    tint = MiniMaxPrimary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -627,7 +627,7 @@ private fun ProveedorBottomBar(
     onTabSelected: (NavTabProveedor) -> Unit
 ) {
     NavigationBar(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp
     ) {
         NavTabProveedor.entries.forEach { tab ->
@@ -643,11 +643,11 @@ private fun ProveedorBottomBar(
                 },
                 alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MiniMaxPrimary,
-                    selectedTextColor = MiniMaxPrimary,
-                    indicatorColor = MiniMaxPrimary.copy(alpha = 0.10f),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }

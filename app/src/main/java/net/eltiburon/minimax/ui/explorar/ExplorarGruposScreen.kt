@@ -47,7 +47,7 @@ fun ExplorarGruposScreen(
     )
 
     Scaffold(
-        containerColor = MiniMaxBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ExplorarTopBar(onBackClick)
         },
@@ -63,7 +63,7 @@ fun ExplorarGruposScreen(
             // Filtros y Búsqueda
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(vertical = 12.dp)
             ) {
                 OutlinedTextField(
@@ -73,11 +73,11 @@ fun ExplorarGruposScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     placeholder = { Text("¿Qué estás buscando?", fontSize = 14.sp) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Color.Gray) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MiniMaxAccent,
-                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = Color(0xFFF9FAFB),
                         unfocusedContainerColor = Color(0xFFF9FAFB)
                     ),
@@ -103,12 +103,12 @@ fun ExplorarGruposScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (isSelected) MiniMaxPrimary else Color(0xFFF3F4F6))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFFF3F4F6))
                                     .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = categoria,
-                                    color = if (isSelected) Color.White else Color.Gray,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 )
@@ -129,7 +129,7 @@ fun ExplorarGruposScreen(
                         text = "Resultados (${grupos.size})",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = MiniMaxTextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -157,7 +157,7 @@ private fun ExplorarTopBar(onBackClick: () -> Unit) {
                 Icon(Icons.Filled.FilterList, contentDescription = "Filtros")
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
@@ -167,7 +167,7 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
         onClick = { onGrupoClick(grupo.id) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
@@ -175,7 +175,7 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
-                    .background(MiniMaxPrimary.copy(alpha = 0.05f))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
             ) {
                 // Ahora usamos la categoría real del grupo (antes estaba hardcodeada).
                 val (bgColor, iconColor, icon) = categoriaVisuals(grupo.categoria)
@@ -202,12 +202,12 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MiniMaxTeal)
+                        .background(MaterialTheme.colorScheme.tertiary)
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "-${grupo.descuentoPorcentaje}%",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onTertiary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -225,14 +225,14 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
                             text = grupo.nombre,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = MiniMaxTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = grupo.proveedor,
                             fontSize = 13.sp,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -266,7 +266,7 @@ private fun ExplorarGrupoCard(grupo: GrupoResumen, onGrupoClick: (String) -> Uni
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                         modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MiniMaxPrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text("Unirse", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
@@ -287,7 +287,7 @@ private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit
         Triple(Icons.Filled.Inventory2, "Inventario", false),
         Triple(Icons.Filled.Person, "Perfil", false)
     )
-    NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
         items.forEachIndexed { index, (icon, label, selected) ->
             NavigationBarItem(
                 selected = selected,
@@ -307,11 +307,11 @@ private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit
                 },
                 alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MiniMaxPrimary,
-                    selectedTextColor = MiniMaxPrimary,
-                    indicatorColor = MiniMaxPrimary.copy(alpha = 0.10f),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }
@@ -320,20 +320,30 @@ private fun ExplorarBottomBar(onHomeClick: () -> Unit, onPerfilClick: () -> Unit
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Colores de coding por categoría: son decorativos/ilustrativos (un tono pastel distinto
+// por rubro), no roles de marca, así que se mantienen literales en ambos temas. Las dos
+// entradas que sí usaban una constante de marca (Textil/MiniMaxAccent y el fallback/
+// MiniMaxPrimary) ahora leen el rol de MaterialTheme para adaptarse en modo oscuro.
+@Composable
 private fun categoriaVisuals(categoria: String): Triple<Color, Color, ImageVector> = when (categoria) {
     "Alimentos & Bebidas" -> Triple(Color(0xFFF0FDF4), Color(0xFF16A34A), Icons.Filled.Restaurant)
     "Electrónica"         -> Triple(Color(0xFFEFF6FF), Color(0xFF2563EB), Icons.Filled.Devices)
     "Decoración"          -> Triple(Color(0xFFFFF7ED), Color(0xFFEA580C), Icons.Filled.Style)
     "Cafetería"           -> Triple(Color(0xFFFEF3C7), Color(0xFFD97706), Icons.Filled.LocalCafe)
-    "Textil"              -> Triple(Color(0xFFF5F3FF), MiniMaxAccent,     Icons.Filled.Checkroom)
+    "Textil"              -> Triple(Color(0xFFF5F3FF), MaterialTheme.colorScheme.secondary, Icons.Filled.Checkroom)
     "Gadgets"             -> Triple(Color(0xFFECFEFF), Color(0xFF0891B2), Icons.Filled.Memory)
-    else                  -> Triple(MiniMaxPrimary.copy(alpha = 0.06f), MiniMaxPrimary, Icons.Filled.ShoppingBag)
+    else                  -> Triple(
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+        MaterialTheme.colorScheme.primary,
+        Icons.Filled.ShoppingBag
+    )
 }
 
+@Composable
 private fun estadoVisuals(estado: EstadoGrupo): Pair<Color, String> = when (estado) {
-    EstadoGrupo.FORMANDOSE -> MiniMaxTeal     to "FORMÁNDOSE"
-    EstadoGrupo.CASI_LLENO -> MiniMaxOrange   to "CASI LLENO"
-    EstadoGrupo.URGENTE    -> MiniMaxBadgeRed to "URGENTE"
+    EstadoGrupo.FORMANDOSE -> MaterialTheme.colorScheme.tertiary to "FORMÁNDOSE"
+    EstadoGrupo.CASI_LLENO -> MiniMaxOrange                      to "CASI LLENO"
+    EstadoGrupo.URGENTE    -> MaterialTheme.colorScheme.error    to "URGENTE"
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────

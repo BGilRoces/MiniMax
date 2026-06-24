@@ -1,5 +1,6 @@
 package net.eltiburon.minimax.ui.onboarding.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,16 +16,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.eltiburon.minimax.ui.theme.DarkPurple
 import net.eltiburon.minimax.ui.theme.GrayishPurple
+import net.eltiburon.minimax.ui.theme.MiniMaxOnPrimaryDark
+import net.eltiburon.minimax.ui.theme.MiniMaxTextPrimaryDark
+import net.eltiburon.minimax.ui.theme.MiniMaxTextSecondaryDark
+import net.eltiburon.minimax.ui.theme.OnboardingPrimaryDark
 import net.eltiburon.minimax.ui.theme.PrimaryPurple
 
 @Composable
 fun OnboardingFooter(currentPage: Int, onNextClick: () -> Unit) {
+    val isDark = isSystemInDarkTheme()
+    val titleColor = if (isDark) MiniMaxTextPrimaryDark else DarkPurple
+    val subtitleColor = if (isDark) MiniMaxTextSecondaryDark else GrayishPurple
+    val buttonColor = if (isDark) OnboardingPrimaryDark else PrimaryPurple
+    val buttonContentColor = if (isDark) MiniMaxOnPrimaryDark else Color.White
+
     val title = when (currentPage) {
         1 -> "Comprá como\nlos grandes"
         2 -> "Sumate a\ncompras grupales"
         else -> "Pagá menos y\nganá más"
     }
-    
+
     val subtitle = when (currentPage) {
         1 -> "Unite a otros compradores para\nalcanzar mínimos mayoristas."
         2 -> "Elegí una oportunidad, definí cantidad\ny seguí el proceso del grupo"
@@ -38,23 +49,23 @@ fun OnboardingFooter(currentPage: Int, onNextClick: () -> Unit) {
     ) {
         Text(
             text = title,
-            color = DarkPurple,
+            color = titleColor,
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             lineHeight = 38.sp
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = subtitle,
-            color = GrayishPurple,
+            color = subtitleColor,
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             lineHeight = 22.sp
         )
-        
+
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
@@ -62,7 +73,7 @@ fun OnboardingFooter(currentPage: Int, onNextClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
@@ -71,7 +82,7 @@ fun OnboardingFooter(currentPage: Int, onNextClick: () -> Unit) {
             ) {
                 Text(
                     text = buttonText,
-                    color = Color.White,
+                    color = buttonContentColor,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -79,7 +90,7 @@ fun OnboardingFooter(currentPage: Int, onNextClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = Color.White
+                    tint = buttonContentColor
                 )
             }
         }

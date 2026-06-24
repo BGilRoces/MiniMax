@@ -36,7 +36,7 @@ fun SeleccionRolScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiniMaxBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
         Column(
@@ -52,12 +52,12 @@ fun SeleccionRolScreen(
                 modifier = Modifier
                     .size(72.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MiniMaxPrimary),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "M",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 38.sp
                 )
@@ -70,7 +70,7 @@ fun SeleccionRolScreen(
                 text = "¿Cómo usarás MiniMax?",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = MiniMaxTextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
 
@@ -79,7 +79,7 @@ fun SeleccionRolScreen(
             Text(
                 text = "Elegí tu perfil para personalizar\ntu experiencia de compra colaborativa.",
                 fontSize = 15.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
@@ -89,12 +89,12 @@ fun SeleccionRolScreen(
             // ── Card Comprador ────────────────────────────────────────────
             RolCard(
                 icon = Icons.Filled.ShoppingCart,
-                iconBg = MiniMaxTeal,
+                iconBg = MaterialTheme.colorScheme.tertiary,
                 titulo = "Comprador",
                 descripcion = "Explorá grupos de compra activos y sumarte para acceder a precios mayoristas.",
                 badge = "Personal",
-                badgeBg = MiniMaxTeal.copy(alpha = 0.12f),
-                badgeColor = MiniMaxTeal,
+                badgeBg = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
+                badgeColor = MaterialTheme.colorScheme.tertiary,
                 onClick = {
                     UsuarioRepository.setRol("comprador")
                     onCompradorClick()
@@ -106,12 +106,12 @@ fun SeleccionRolScreen(
             // ── Card Proveedor ────────────────────────────────────────────
             RolCard(
                 icon = Icons.Filled.Storefront,
-                iconBg = MiniMaxAccent,
+                iconBg = MaterialTheme.colorScheme.secondary,
                 titulo = "Proveedor",
                 descripcion = "Publicá oportunidades de venta, gestioná grupos y validá pedidos mayoristas.",
                 badge = "Negocio",
-                badgeBg = MiniMaxAccent.copy(alpha = 0.12f),
-                badgeColor = MiniMaxAccent,
+                badgeBg = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                badgeColor = MaterialTheme.colorScheme.secondary,
                 onClick = {
                     UsuarioRepository.setRol("proveedor")
                     onProveedorClick()
@@ -123,7 +123,7 @@ fun SeleccionRolScreen(
             Text(
                 text = "Podés cambiar esto más adelante desde tu perfil.",
                 fontSize = 12.sp,
-                color = MiniMaxTextPrimary.copy(alpha = 0.40f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.40f),
                 textAlign = TextAlign.Center
             )
         }
@@ -156,7 +156,7 @@ private fun RolCard(
                 shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -190,7 +190,7 @@ private fun RolCard(
                         text = titulo,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = MiniMaxTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
@@ -211,7 +211,7 @@ private fun RolCard(
                 Text(
                     text = descripcion,
                     fontSize = 12.sp,
-                    color = MiniMaxTextPrimary.copy(alpha = 0.55f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     lineHeight = 17.sp
                 )
             }
