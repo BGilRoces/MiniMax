@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/c/Users/DELL/Downloads/TP APPS1/MiniMax\" && cat -n app/src/main/java/net/eltiburon/minimax/ui/proveedor/NuevaOportunidadScreen.kt | sed -n '1,260p')",
+      "Read(//c/c/Users/DELL/Downloads/TP APPS1/MiniMax/app/src/main/java/net/eltiburon/minimax/ui/proveedor/**)"
+    ]
+  }
+}
