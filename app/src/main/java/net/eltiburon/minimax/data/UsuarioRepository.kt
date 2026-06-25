@@ -1,5 +1,7 @@
 package net.eltiburon.minimax.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,16 +15,21 @@ import net.eltiburon.minimax.model.Usuario
 import java.util.UUID
 
 /**
- * Fuente única de datos para usuarios, ahora persistida con Room (antes era un MutableStateFlow
+ * Fuente única de datos para usuarios, persistida con Room (antes era un MutableStateFlow
  * en memoria, así que los registros se perdían al cerrar la app). Mismo patrón que
  * OportunidadRepository: object singleton conectado a un DAO real vía [init] desde MiniMaxApp.
  *
- * La sesión activa ([usuarioActual]) sigue viviendo en memoria: identifica al usuario logueado
- * durante la ejecución, pero las cuentas en sí quedan guardadas en SQLite.
+ * La sesión activa ([usuarioActual]) se persiste en SharedPreferences. Antes vivía solo en
+ * memoria, así que cuando Android mataba y recreaba el proceso (background, presión de memoria,
+ * "No conservar actividades") el singleton se reiniciaba a null mientras Navigation restauraba
+ * el back stack: el usuario quedaba en la pantalla donde estaba pero sin sesión, lo que se veía
+ * como un cierre de sesión intermitente. Ahora la restauramos al iniciar, antes de la primera
+ * composición, así sobrevive a la muerte de proceso.
  */
 object UsuarioRepository {
 
     private lateinit var dao: UsuarioDao
+    private lateinit var prefs: SharedPreferences
 
     // Scope propio para persistir cambios de sesión (ej. el rol) sin bloquear a quien los dispara.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -30,8 +37,12 @@ object UsuarioRepository {
     private val _usuarioActual = MutableStateFlow<Usuario?>(null)
     val usuarioActual: StateFlow<Usuario?> = _usuarioActual.asStateFlow()
 
-    fun init(dao: UsuarioDao) {
+    fun init(dao: UsuarioDao, context: Context) {
         this.dao = dao
+        prefs = context.getSharedPreferences("sesion", Context.MODE_PRIVATE)
+        // Restaura la sesión guardada de forma síncrona para que ya esté disponible en la
+        // primera composición y no haya un parpadeo de "sesión cerrada" tras recrear el proceso.
+        _usuarioActual.value = leerSesion()
     }
 
     suspend fun registrar(nombre: String, email: String, password: String): Result<Usuario> {
@@ -54,20 +65,20 @@ object UsuarioRepository {
             return Result.failure(IllegalArgumentException("Email o contraseña incorrectos"))
         }
         val usuario = entidad.toDomain()
-        _usuarioActual.value = usuario
+        actualizarSesion(usuario)
         return Result.success(usuario)
     }
 
     fun setRol(rol: String) {
         val actualizado = _usuarioActual.value?.copy(rol = rol) ?: return
-        _usuarioActual.value = actualizado
+        actualizarSesion(actualizado)
         scope.launch { dao.actualizar(actualizado.toEntity()) }
     }
 
     /** Actualiza nombre/email del usuario logueado y lo persiste (editado desde Mi Perfil). */
     fun actualizarPerfil(nombre: String, email: String) {
         val actualizado = _usuarioActual.value?.copy(nombre = nombre, email = email) ?: return
-        _usuarioActual.value = actualizado
+        actualizarSesion(actualizado)
         scope.launch { dao.actualizar(actualizado.toEntity()) }
     }
 
@@ -77,18 +88,54 @@ object UsuarioRepository {
      */
     fun actualizarFoto(fotoUri: String?) {
         val actualizado = _usuarioActual.value?.copy(fotoUri = fotoUri) ?: return
-        _usuarioActual.value = actualizado
+        actualizarSesion(actualizado)
         scope.launch { dao.actualizar(actualizado.toEntity()) }
     }
 
     fun cerrarSesion() {
         _usuarioActual.value = null
+        prefs.edit().clear().apply()
+    }
+
+    /**
+     * Actualiza la sesión en memoria y la persiste. Guardamos los campos directamente en
+     * SharedPreferences (no el id solo) para poder restaurar en [init] de forma síncrona, sin
+     * tocar Room en el hilo principal. La cuenta completa, con password, sigue viviendo en SQLite.
+     */
+    private fun actualizarSesion(usuario: Usuario) {
+        _usuarioActual.value = usuario
+        prefs.edit()
+            .putString(KEY_ID, usuario.id)
+            .putString(KEY_NOMBRE, usuario.nombre)
+            .putString(KEY_EMAIL, usuario.email)
+            .putString(KEY_PASSWORD, usuario.password)
+            .putString(KEY_ROL, usuario.rol)
+            .putString(KEY_FOTO_URI, usuario.fotoUri)
+            .apply()
+    }
+
+    /** Reconstruye la sesión persistida desde SharedPreferences (o null si no hay ninguna). */
+    private fun leerSesion(): Usuario? {
+        val id = prefs.getString(KEY_ID, null) ?: return null
+        return Usuario(
+            id = id,
+            nombre = prefs.getString(KEY_NOMBRE, "").orEmpty(),
+            email = prefs.getString(KEY_EMAIL, "").orEmpty(),
+            password = prefs.getString(KEY_PASSWORD, "").orEmpty(),
+            rol = prefs.getString(KEY_ROL, null),
+            fotoUri = prefs.getString(KEY_FOTO_URI, null)
+        )
     }
 
     /** Primera instalación: si la tabla está vacía, la precarga con el usuario de prueba. */
     suspend fun sembrarSiEstaVacia() {
         if (dao.contar() == 0) {
             dao.insertar(seed().toEntity())
+        }
+        // Asegura una cuenta de proveedor de prueba. Idempotente: solo la inserta si no existe,
+        // así sobrevive a reinstalar la demo sin duplicarse en cada arranque.
+        if (dao.obtenerPorEmail("test1@gmail.com") == null) {
+            dao.insertar(seedProveedor().toEntity())
         }
     }
 
@@ -116,4 +163,20 @@ object UsuarioRepository {
         email = "test@minimax.com",
         password = "123456"
     )
+
+    private fun seedProveedor() = Usuario(
+        id = "test-proveedor",
+        nombre = "Proveedor de Prueba",
+        email = "test1@gmail.com",
+        password = "testeo",
+        rol = "proveedor"
+    )
+
+    // Claves de la sesión persistida en SharedPreferences.
+    private const val KEY_ID = "usuario_id"
+    private const val KEY_NOMBRE = "usuario_nombre"
+    private const val KEY_EMAIL = "usuario_email"
+    private const val KEY_PASSWORD = "usuario_password"
+    private const val KEY_ROL = "usuario_rol"
+    private const val KEY_FOTO_URI = "usuario_foto_uri"
 }

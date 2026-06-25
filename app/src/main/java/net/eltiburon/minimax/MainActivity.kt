@@ -14,6 +14,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -55,8 +56,8 @@ import net.eltiburon.minimax.ui.seleccionrol.SeleccionRolScreen
 import net.eltiburon.minimax.ui.theme.MiniMaxTheme
 
 /**
- * Rutas del grafo de navegación. Centralizar los nombres acá evita "magic strings" repartidos
- * por la app y facilita construir las rutas con argumentos (helpers como [grupoDetalle]).
+ * Rutas del grafo de navegación. Centralizamos los nombres acá para evitar "magic strings" repartidos
+ * por la app y facilitar construir las rutas con argumentos (helpers como [grupoDetalle]).
  */
 object Rutas {
     const val ONBOARDING = "onboarding"
@@ -129,6 +130,19 @@ private fun MiniMaxNavHost() {
     // Ruta actual (sin argumentos) para decidir qué barras mostrar y qué pestaña resaltar.
     val backStackEntry by navController.currentBackStackEntryAsState()
     val rutaActual = rutaBase(backStackEntry?.destination?.route)
+
+    // Si ya hay una sesión persistida (restaurada al iniciar el repo), arrancamos directo en el
+    // home del rol en vez del onboarding. Se lee una sola vez: el NavHost solo usa el destino
+    // inicial en la primera composición, y si Navigation restauró un back stack guardado ese tiene
+    // prioridad igual.
+    val startDestination = remember {
+        val sesion = UsuarioRepository.usuarioActual.value
+        when {
+            sesion == null -> Rutas.ONBOARDING
+            sesion.rol == Rutas.ROL_PROVEEDOR -> Rutas.DASHBOARD_PROVEEDOR
+            else -> Rutas.HOME
+        }
+    }
 
     // El rol del usuario logueado define qué bottom bar / menú lateral corresponde.
     val usuario by UsuarioRepository.usuarioActual.collectAsState()
@@ -218,7 +232,7 @@ private fun MiniMaxNavHost() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Rutas.ONBOARDING,
+                startDestination = startDestination,
                 modifier = Modifier.padding(innerPadding)
             ) {
 

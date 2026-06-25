@@ -34,7 +34,7 @@ class MiniMaxApp : Application() {
 
         OportunidadRepository.init(database.oportunidadDao())
         ParticipacionRepository.init(database.participacionDao())
-        UsuarioRepository.init(database.usuarioDao())
+        UsuarioRepository.init(database.usuarioDao(), applicationContext)
 
         // Primera instalación: si la base está vacía, la precargamos con el catálogo demo
         // (antes vivía hardcodeado en los MutableStateFlow de cada repo).
